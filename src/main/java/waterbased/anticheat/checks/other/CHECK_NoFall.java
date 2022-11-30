@@ -13,7 +13,6 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.scheduler.BukkitTask;
 import waterbased.anticheat.AntiCheat;
 import waterbased.anticheat.utils.Notifier;
-import waterbased.anticheat.utils.UtilCheat;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -41,16 +40,12 @@ public class CHECK_NoFall implements Listener {
         }
     }
 
-    private final HashMap<UUID, Location> highest = new HashMap<>();
-    private final HashMap<UUID, Boolean> lastMovementWasOnGround = new HashMap<>();
+    private final HashMap<UUID, Location> lastLocationOnGround = new HashMap<UUID, Location>();
+    private final HashMap<UUID, Boolean> lastMovementWasOnGround = new HashMap<UUID, Boolean>();
     private final HashMap<UUID, TookDamage> tookFallDamage = new HashMap<>();
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onMove(PlayerMoveEvent e) {
-
-        if(UtilCheat.isOnGround(e.getPlayer().getLocation(), 1);
-
-
         boolean isOnGround = e.getPlayer().getLocation().add(0, -0.1, 0).getBlock().getType() != Material.AIR;
         boolean wasOnGround = this.lastMovementWasOnGround.getOrDefault(e.getPlayer().getUniqueId(), false);
 
@@ -88,7 +83,7 @@ public class CHECK_NoFall implements Listener {
                                     e.getPlayer().damage((yDiff - 3) - tookD.damage);
                                     Notifier.notify(Notifier.Check.OTHER_NoFall,
                                             e.getPlayer(),
-                                            String.format("yd: %.2f, td: %.2f, d: %.2f", yDiff, tookD.damage, (yDiff - 3) - tookD.damage));
+                                            String.format("yd: %.2f, td: %.2f, d: %.2f", yDiff, tookD.damage, (yDiff - 3)));
                                 }
                                 tookFallDamage.remove(e.getPlayer().getUniqueId());
                             }
