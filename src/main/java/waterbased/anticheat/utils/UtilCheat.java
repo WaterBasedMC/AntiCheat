@@ -3,7 +3,6 @@ package waterbased.anticheat.utils;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -179,18 +178,50 @@ public final class UtilCheat {
 		return touchedX;
 	}
 
-	public static boolean isOnGround(final Location location, final int down) {
+	public static boolean isOnGround(Location loc) {
+		return isOnGround(loc, 0.05);
+	}
+
+	public static boolean isOnGround(Location locIn, double down) {
+
+		if(UtilBlock.isClimbableBlock(locIn.getBlock())) return true;
+		if(UtilBlock.isLiquid(locIn.getBlock())) return true;
+		if(UtilCheat.isOnLilyPad(locIn)) return true;
+
+		List<Block> blocks = new ArrayList<>();
+		Location loc = locIn.clone().subtract(0, down, 0);
+		blocks.add(loc.getBlock());
+		blocks.add(loc.clone().add(0.3, 0, 0).getBlock());
+		blocks.add(loc.clone().add(0, 0, 0.3).getBlock());
+		blocks.add(loc.clone().add(-0.3, 0, 0).getBlock());
+		blocks.add(loc.clone().add(0, 0, -0.3).getBlock());
+		blocks.add(loc.clone().add(0.3, 0, 0.3).getBlock());
+		blocks.add(loc.clone().add(0.3, 0, -0.3).getBlock());
+		blocks.add(loc.clone().add(-0.3, 0, 0.3).getBlock());
+		blocks.add(loc.clone().add(-0.3, 0, -0.3).getBlock());
+
+		for(Block b : blocks) {
+			if(UtilBlock.isSolid(b)) {
+				return true;
+			}
+		}
+
+
+		return false;
+	}
+
+
+
+	public static boolean isOnGroundOld(final Location location, final int down) {
 		final double posX = location.getX();
 		final double posZ = location.getZ();
-		final double fracX = (UtilMath.getFraction(posX) > 0.0) ? Math.abs(UtilMath.getFraction(posX))
-				: (1.0 - Math.abs(UtilMath.getFraction(posX)));
-		final double fracZ = (UtilMath.getFraction(posZ) > 0.0) ? Math.abs(UtilMath.getFraction(posZ))
-				: (1.0 - Math.abs(UtilMath.getFraction(posZ)));
+		final double fracX = (UtilMath.getFraction(posX) > 0.0) ? Math.abs(UtilMath.getFraction(posX)) : (1.0 - Math.abs(UtilMath.getFraction(posX)));
+		final double fracZ = (UtilMath.getFraction(posZ) > 0.0) ? Math.abs(UtilMath.getFraction(posZ)) : (1.0 - Math.abs(UtilMath.getFraction(posZ)));
 		final int blockX = location.getBlockX();
 		final int blockY = location.getBlockY() - down;
 		final int blockZ = location.getBlockZ();
 		final World world = location.getWorld();
-		if (UtilBlock.isSolid(world.getBlockAt(blockX, blockY, blockZ))) {
+		if (UtilBlock.isSolid(world.getBlockAt(blockX, blockY, blockZ)) || isOnLilyPad(location)) {
 			return true;
 		}
 		if (fracX < 0.3) {
@@ -312,7 +343,11 @@ public final class UtilCheat {
 	}
 
 	public static boolean isOnLilyPad(Player player) {
-		Block block = player.getLocation().getBlock();
+		return isOnLilyPad(player.getLocation());
+	}
+
+	public static boolean isOnLilyPad(Location loc) {
+		Block block = loc.getBlock();
 		Material lily = Material.LILY_PAD;
 
 		return (block.getType() == lily) || (block.getRelative(BlockFace.NORTH).getType() == lily)
@@ -341,11 +376,6 @@ public final class UtilCheat {
 				|| (player.getLocation().clone().add(0.0D, 1.0D, 0.0D).getBlock().getType() == Material.COBWEB)
 				|| (player.getLocation().getBlock().getRelative(BlockFace.DOWN).getType() == Material.COBWEB)
 				|| (player.getLocation().getBlock().getRelative(BlockFace.UP).getType() == Material.COBWEB);
-	}
-
-	public static boolean isClimbableBlock(Block block) {
-		return (block.getType() == Material.VINE) || (block.getType() == Material.LADDER)
-				|| (block.getType() == Material.WATER) || (block.getType() == Material.LAVA);
 	}
 
 	public static boolean isOnVine(Player player) {
