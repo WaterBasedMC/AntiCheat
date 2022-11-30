@@ -1,0 +1,7 @@
+name: AntiCheat
+version: '${version}'
+main: waterbased.anticheat.AntiCheat
+api-version: 1.19
+load: STARTUP
+authors: [HerrVergesslich]
+description: AntiCheat matching the WaterBased-Client
