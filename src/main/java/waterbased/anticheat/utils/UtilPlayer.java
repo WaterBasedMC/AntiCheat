@@ -60,20 +60,6 @@ public class UtilPlayer {
 	}
 
 	public static boolean isOnClimbable(Player player, int blocks) {
-//		if (blocks == 0) {
-//			for (Block block : UtilBlock.getSurrounding(player.getLocation().getBlock(), false)) {
-//				if (block.getType() == Material.LADDER || block.getType() == Material.VINE) {
-//					return true;
-//				}
-//			}
-//		} else {
-//			for (Block block : UtilBlock.getSurrounding(player.getLocation().clone().add(0.0D, 1.0D, 0.0D).getBlock(),
-//					false)) {
-//				if (block.getType() == Material.LADDER || block.getType() == Material.VINE) {
-//					return true;
-//				}
-//			}
-//		}
 		return isOnClimbable2(player);
 	}
 

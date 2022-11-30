@@ -300,4 +300,9 @@ public class UtilBlock {
 		}
 		return false;
 	}
+
+	public static boolean isClimbableBlock(Block block) {
+		return (block.getType() == Material.VINE) || (block.getType() == Material.LADDER)
+				|| (block.getType() == Material.WATER) || (block.getType() == Material.LAVA);
+	}
 }

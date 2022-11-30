@@ -15,7 +15,8 @@ public class Notifier {
 
     public enum Check {
 
-        OTHER_NoFall("NoFall", "Taking no fall damage");
+        OTHER_NoFall("NoFall", "Taking no fall damage"),
+        MOVEMENT_Flight("Flight", "Flying in survival/adventure mode.");
 
         private String name;
         private String description;
@@ -77,7 +78,9 @@ public class Notifier {
 
         final TextComponent finalMsg = msg;
 
-        Bukkit.getOnlinePlayers().stream().filter(p -> p.hasPermission("wac.notify")).forEach(p -> p.sendMessage(finalMsg));
+        //Bukkit.getOnlinePlayers().stream().filter(p -> p.hasPermission("wac.notify")).forEach(p -> p.sendMessage(finalMsg));
+        Bukkit.broadcast(finalMsg);
+
         AntiCheat.instance.getLogger().warning(player.getName() + " failed " + check.getName() + ": (" + message + ")");
 
     }
