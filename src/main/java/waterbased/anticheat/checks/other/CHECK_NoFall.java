@@ -21,26 +21,6 @@ import java.util.HashSet;
 
 public class CHECK_NoFall implements Listener {
 
-    private class DamageDue {
-        public final double damage;
-        public final BukkitTask task;
-        public DamageDue(double damage, BukkitTask task) {
-            this.damage = damage;
-            this.task = task;
-        }
-    }
-
-    private class TookDamage {
-        public final double damage;
-        public final long tick;
-        public final EntityDamageEvent.DamageCause cause;
-        public TookDamage(double damage, long tick, EntityDamageEvent.DamageCause cause) {
-            this.damage = damage;
-            this.tick = tick;
-            this.cause = cause;
-        }
-    }
-
     private final HashMap<Player, Location> highest = new HashMap<>();
     private final HashMap<Player, Location> lastOnGround = new HashMap<>();
     private final HashSet<Player> falling = new HashSet<>();
