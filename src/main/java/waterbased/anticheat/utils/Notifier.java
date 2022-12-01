@@ -16,7 +16,8 @@ public class Notifier {
     public enum Check {
 
         OTHER_NoFall("NoFall", "Taking no fall damage"),
-        MOVEMENT_Flight("Flight", "Flying in survival/adventure mode.");
+        MOVEMENT_Flight("Flight", "Flying in survival/adventure mode."),
+        MOVEMENT_ElytraFlight("ElytraFlight", "Gliding like wearing a elytra without wearing it.");
 
         private String name;
         private String description;

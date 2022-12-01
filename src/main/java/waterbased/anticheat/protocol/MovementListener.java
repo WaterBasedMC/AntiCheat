@@ -6,14 +6,12 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.events.PacketListener;
-import com.comphenix.protocol.wrappers.EnumWrappers;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import waterbased.anticheat.AntiCheat;
 import waterbased.anticheat.events.PlayerOnGroundChangeEvent;
 import waterbased.anticheat.events.PlayerPreciseMoveEvent;
-import waterbased.anticheat.events.PlayerStartElytraEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
