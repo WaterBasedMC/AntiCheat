@@ -25,13 +25,13 @@ public class MovementListener {
 
     public static void register() {
 
-        ArrayList<PacketType> packetTypes = new ArrayList<PacketType>();
-        packetTypes.add(PacketType.Play.Client.POSITION);
-        packetTypes.add(PacketType.Play.Client.POSITION_LOOK);
-        packetTypes.add(PacketType.Play.Client.LOOK);
-        packetTypes.add(PacketType.Play.Client.GROUND);
+        ArrayList<PacketType> packetTypes1 = new ArrayList<PacketType>();
+        packetTypes1.add(PacketType.Play.Client.POSITION);
+        packetTypes1.add(PacketType.Play.Client.POSITION_LOOK);
+        packetTypes1.add(PacketType.Play.Client.LOOK);
+        packetTypes1.add(PacketType.Play.Client.GROUND);
 
-        PacketListener listener1 = new PacketAdapter(AntiCheat.instance, packetTypes) {
+        PacketListener listener1 = new PacketAdapter(AntiCheat.instance, packetTypes1) {
 
             @Override
             public void onPacketReceiving(PacketEvent e) {
@@ -67,28 +67,27 @@ public class MovementListener {
                     loc.setPitch(pitch);
                 }
 
-                if(packet.getType() == PacketType.Play.Client.GROUND) {
+                if (packet.getType() == PacketType.Play.Client.GROUND) {
                     onGround = packet.getBooleans().read(0);
                     loc = e.getPlayer().getLocation();
                 }
 
-                if (lastLocation.containsKey(e.getPlayer())) {
-                    final Location finLoc = loc;
-                    final boolean finOnGround = onGround;
-                    Bukkit.getScheduler().runTask(AntiCheat.instance, () -> {
-                        Bukkit.getPluginManager().callEvent(new PlayerPreciseMoveEvent(e.getPlayer(), lastLocation.get(e.getPlayer()), finLoc, finOnGround));
-                        if(lastOnGroundState.getOrDefault(e.getPlayer(), false) != finOnGround) {
+                final Location finLoc = loc;
+                final boolean finOnGround = onGround;
+                Bukkit.getScheduler().runTask(AntiCheat.instance, new Runnable() {
+                    @Override
+                    public void run() {
+                        Bukkit.getPluginManager().callEvent(new PlayerPreciseMoveEvent(e.getPlayer(), lastLocation.getOrDefault(e.getPlayer(), finLoc), finLoc, finOnGround));
+                        if (lastOnGroundState.getOrDefault(e.getPlayer(), false) != finOnGround) {
                             Bukkit.getPluginManager().callEvent(new PlayerOnGroundChangeEvent(e.getPlayer(), finOnGround));
                             lastOnGroundState.put(e.getPlayer(), finOnGround);
                         }
-                    });
-                }
-                lastLocation.put(e.getPlayer(), loc);
-
+                        lastLocation.put(e.getPlayer(), finLoc);
+                    }
+                });
             }
 
         };
-
         listeners.add(listener1);
         ProtocolLibrary.getProtocolManager().addPacketListener(listener1);
 

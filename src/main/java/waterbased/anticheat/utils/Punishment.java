@@ -11,46 +11,64 @@ import org.bukkit.util.Vector;
 import waterbased.anticheat.AntiCheat;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class Punishment implements Listener {
 
-    private static final double GRAVITY_CONST = 9.81;
+    private static final double GRAVITY_CONST = 0.08;
     private static final HashMap<Player, Long> frozen = new HashMap<>();
 
+    private static final HashSet<Player> punishing = new HashSet<>();
+
+    public static boolean isBeeingPunished(Player p) {
+        return punishing.contains(p);
+    }
 
     public static void pullDown(Player p) {
+        if (isBeeingPunished(p)) return;
+
+        punishing.add(p);
 
         Vector v = new Vector(0, 0, 0);
         long startTick = AntiCheat.tick;
 
         new Thread(() -> {
-            while(!UtilCheat.isOnGround(p.getLocation(), 1)) {
+            while (!UtilCheat.isOnGround(p.getLocation()) && !p.isDead()) {
                 Bukkit.getScheduler().runTask(AntiCheat.instance, () -> {
-                    Location to = p.getLocation().subtract(0, GRAVITY_CONST * ((AntiCheat.tick - startTick) / 20.0), 0);
-                    while(to.getBlock().isSolid()) {
+                    double y = GRAVITY_CONST * ((AntiCheat.tick - startTick));
+                    if (y > 3.92) y = 3.92;
+
+                    Location to = p.getLocation().subtract(0, y, 0);
+                    while (to.getBlock().isSolid()) {
                         to.add(0, 0.1, 0);
                     }
                     p.teleport(to, PlayerTeleportEvent.TeleportCause.PLUGIN);
                 });
                 try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {}
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    punishing.remove(p);
+                }
             }
+            punishing.remove(p);
         }).start();
     }
+
     public static void freeze(Player player) {
         freeze(player, 10);
     }
 
     public static void freeze(Player player, long ticks) {
         frozen.put(player, AntiCheat.tick + ticks);
+        punishing.add(player);
     }
 
     @EventHandler
     public void onMove(PlayerMoveEvent e) {
-        if(frozen.containsKey(e.getPlayer())) {
-            if(AntiCheat.tick >= frozen.get(e.getPlayer())) {
+        if (frozen.containsKey(e.getPlayer())) {
+            if (AntiCheat.tick >= frozen.get(e.getPlayer())) {
                 frozen.remove(e.getPlayer());
+                punishing.remove(e.getPlayer());
                 return;
             }
             e.setCancelled(true);

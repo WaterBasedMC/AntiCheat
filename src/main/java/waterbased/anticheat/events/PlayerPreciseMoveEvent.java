@@ -10,10 +10,10 @@ public class PlayerPreciseMoveEvent extends Event {
 
     public static HandlerList handlers = new HandlerList();
 
-    private Player player;
-    private Location from;
-    private Location to;
-    private boolean onGround;
+    private final Player player;
+    private final Location from;
+    private final Location to;
+    private final boolean onGround;
 
     public PlayerPreciseMoveEvent(Player p, Location from, Location to, boolean onGround) {
         this.player = p;
