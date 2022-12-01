@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import waterbased.anticheat.checks.movement.CHECK_Elytra;
 import waterbased.anticheat.checks.movement.CHECK_Flight;
+import waterbased.anticheat.checks.movement.CHECK_Speed;
 import waterbased.anticheat.checks.other.CHECK_NoFall;
 import waterbased.anticheat.checks.world.CHECK_BlockBreak;
 import waterbased.anticheat.protocol.MovementListener;
@@ -35,6 +36,7 @@ public final class AntiCheat extends JavaPlugin {
         //Movement
         Bukkit.getPluginManager().registerEvents(new CHECK_Flight(), this);
         Bukkit.getPluginManager().registerEvents(new CHECK_Elytra(), this);
+        Bukkit.getPluginManager().registerEvents(new CHECK_Speed(), this);
 
         //World
         Bukkit.getPluginManager().registerEvents(new CHECK_BlockBreak(), this);
