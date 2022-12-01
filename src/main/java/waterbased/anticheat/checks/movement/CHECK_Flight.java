@@ -5,7 +5,9 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.potion.PotionEffect;
@@ -60,6 +62,7 @@ public class CHECK_Flight implements Listener {
             e.getPlayer().teleport(lastGround.get(e.getPlayer()));
             Punishment.freeze(e.getPlayer());
             Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastGround.get(e.getPlayer()).getY()));
+            return;
         }
 
         if (!vertMovements.containsKey(e.getPlayer())) vertMovements.put(e.getPlayer(), new ArrayList<>());
@@ -161,7 +164,7 @@ public class CHECK_Flight implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onTeleport(PlayerTeleportEvent e) {
         lastGround.put(e.getPlayer(), e.getTo());
     }
