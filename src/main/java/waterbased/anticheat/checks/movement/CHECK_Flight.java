@@ -47,7 +47,7 @@ public class CHECK_Flight implements Listener {
             return;
         }
 
-        if (UtilCheat.isOnGround(e.getTo(), 1) || e.getPlayer().getAllowFlight() || !lastGround.containsKey(e.getPlayer())) {
+        if (UtilCheat.isOnGround(e.getTo()) || e.getPlayer().getAllowFlight() || !lastGround.containsKey(e.getPlayer())) {
             lastGround.put(e.getPlayer(), e.getTo());
             onGroundGrace.put(e.getPlayer(), 0);
             noYGrace.put(e.getPlayer(), 0);
@@ -134,8 +134,6 @@ public class CHECK_Flight implements Listener {
             }
             lastYMove.put(e.getPlayer(), sum);
         }
-
-        e.getPlayer().sendActionBar(Component.text(vertDirection.get(e.getPlayer()).toString()));
 
     }
 
