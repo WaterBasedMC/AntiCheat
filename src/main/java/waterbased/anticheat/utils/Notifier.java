@@ -1,11 +1,8 @@
 package waterbased.anticheat.utils;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.ComponentBuilder;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.Style;
-import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -15,10 +12,14 @@ public class Notifier {
 
     public enum Check {
 
-        OTHER_NoFall("NoFall", "Taking no fall damage");
+        OTHER_NoFall("NoFall", "Taking no fall damage"),
+        MOVEMENT_Flight("Flight", "Flying in survival/adventure mode."),
+        MOVEMENT_ElytraFlight("ElytraFlight", "Gliding like wearing a elytra without wearing it."),
 
-        private String name;
-        private String description;
+        WORLD_BlockBreak("BlockBreak", "Breaking blocks illegally");
+
+        private final String name;
+        private final String description;
 
         Check(String name, String description) {
             this.name = name;
@@ -74,13 +75,12 @@ public class Notifier {
                         .decoration(TextDecoration.ITALIC, false)
                         .color(NamedTextColor.WHITE));
 
-
         final TextComponent finalMsg = msg;
 
-        Bukkit.getOnlinePlayers().stream().filter(p -> p.hasPermission("wac.notify")).forEach(p -> p.sendMessage(finalMsg));
+        Bukkit.getOnlinePlayers()/*.stream().filter(p -> p.hasPermission("wac.notify"))*/.forEach(p -> p.sendMessage(finalMsg));
+
         AntiCheat.instance.getLogger().warning(player.getName() + " failed " + check.getName() + ": (" + message + ")");
 
     }
-
 
 }
