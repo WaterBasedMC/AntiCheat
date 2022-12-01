@@ -14,7 +14,9 @@ public class Notifier {
 
         OTHER_NoFall("NoFall", "Taking no fall damage"),
         MOVEMENT_Flight("Flight", "Flying in survival/adventure mode."),
-        MOVEMENT_ElytraFlight("ElytraFlight", "Gliding like wearing a elytra without wearing it.");
+        MOVEMENT_ElytraFlight("ElytraFlight", "Gliding like wearing a elytra without wearing it."),
+
+        WORLD_BlockBreak("BlockBreak", "Breaking blocks illegally");
 
         private final String name;
         private final String description;
@@ -75,8 +77,7 @@ public class Notifier {
 
         final TextComponent finalMsg = msg;
 
-        //Bukkit.getOnlinePlayers().stream().filter(p -> p.hasPermission("wac.notify")).forEach(p -> p.sendMessage(finalMsg));
-        Bukkit.broadcast(finalMsg);
+        Bukkit.getOnlinePlayers()/*.stream().filter(p -> p.hasPermission("wac.notify"))*/.forEach(p -> p.sendMessage(finalMsg));
 
         AntiCheat.instance.getLogger().warning(player.getName() + " failed " + check.getName() + ": (" + message + ")");
 
