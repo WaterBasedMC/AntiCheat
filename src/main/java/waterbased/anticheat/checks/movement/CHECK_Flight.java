@@ -60,6 +60,7 @@ public class CHECK_Flight implements Listener {
             e.getPlayer().teleport(lastGround.get(e.getPlayer()));
             Punishment.freeze(e.getPlayer());
             Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastGround.get(e.getPlayer()).getY()));
+            return;
         }
 
         if (!vertMovements.containsKey(e.getPlayer())) vertMovements.put(e.getPlayer(), new ArrayList<>());
