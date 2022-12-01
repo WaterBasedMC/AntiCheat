@@ -25,7 +25,7 @@ public class Punishment implements Listener {
     }
 
     public static void pullDown(Player p) {
-        if(isBeeingPunished(p)) return;
+        if (isBeeingPunished(p)) return;
 
         punishing.add(p);
 
@@ -33,13 +33,13 @@ public class Punishment implements Listener {
         long startTick = AntiCheat.tick;
 
         new Thread(() -> {
-            while(!UtilCheat.isOnGround(p.getLocation()) && !p.isDead()) {
+            while (!UtilCheat.isOnGround(p.getLocation()) && !p.isDead()) {
                 Bukkit.getScheduler().runTask(AntiCheat.instance, () -> {
                     double y = GRAVITY_CONST * ((AntiCheat.tick - startTick));
-                    if(y > 3.92) y = 3.92;
+                    if (y > 3.92) y = 3.92;
 
                     Location to = p.getLocation().subtract(0, y, 0);
-                    while(to.getBlock().isSolid()) {
+                    while (to.getBlock().isSolid()) {
                         to.add(0, 0.1, 0);
                     }
                     p.teleport(to, PlayerTeleportEvent.TeleportCause.PLUGIN);
@@ -53,6 +53,7 @@ public class Punishment implements Listener {
             punishing.remove(p);
         }).start();
     }
+
     public static void freeze(Player player) {
         freeze(player, 10);
     }
@@ -64,8 +65,8 @@ public class Punishment implements Listener {
 
     @EventHandler
     public void onMove(PlayerMoveEvent e) {
-        if(frozen.containsKey(e.getPlayer())) {
-            if(AntiCheat.tick >= frozen.get(e.getPlayer())) {
+        if (frozen.containsKey(e.getPlayer())) {
+            if (AntiCheat.tick >= frozen.get(e.getPlayer())) {
                 frozen.remove(e.getPlayer());
                 punishing.remove(e.getPlayer());
                 return;

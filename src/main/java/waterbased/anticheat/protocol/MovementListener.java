@@ -91,7 +91,6 @@ public class MovementListener {
         listeners.add(listener1);
         ProtocolLibrary.getProtocolManager().addPacketListener(listener1);
 
-
     }
 
     public static void unregister() {

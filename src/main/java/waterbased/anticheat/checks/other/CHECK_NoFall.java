@@ -9,7 +9,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.scheduler.BukkitTask;
 import waterbased.anticheat.events.PlayerPreciseMoveEvent;
 import waterbased.anticheat.utils.Notifier;
 import waterbased.anticheat.utils.Punishment;
@@ -17,7 +16,6 @@ import waterbased.anticheat.utils.UtilCheat;
 
 import java.util.HashMap;
 import java.util.HashSet;
-
 
 public class CHECK_NoFall implements Listener {
 
@@ -33,7 +31,7 @@ public class CHECK_NoFall implements Listener {
             lastOnGround.put(e.getPlayer(), e.getTo());
             falling.remove(e.getPlayer());
         } else {
-            if(highest.getOrDefault(e.getPlayer(), e.getTo()).getY() < e.getTo().getY()) {
+            if (highest.getOrDefault(e.getPlayer(), e.getTo()).getY() < e.getTo().getY()) {
                 highest.put(e.getPlayer(), e.getTo());
                 falling.remove(e.getPlayer());
             } else {
@@ -45,29 +43,28 @@ public class CHECK_NoFall implements Listener {
 
     @EventHandler
     public void onDamage(EntityDamageEvent e) {
-        if(e.getEntity() instanceof Player p) {
-            if(e.getCause() == EntityDamageEvent.DamageCause.FALL) {
+        if (e.getEntity() instanceof Player p) {
+            if (e.getCause() == EntityDamageEvent.DamageCause.FALL) {
                 double yDiff = highest.get(p).getY() - p.getLocation().getY();
                 double sd = yDiff - 3;
 
                 Block landingBlock = p.getLocation().getBlock().getRelative(BlockFace.DOWN);
 
-                if(landingBlock.getType() == Material.HAY_BLOCK) {
+                if (landingBlock.getType() == Material.HAY_BLOCK) {
                     sd = sd * 0.2;
-                } else if(landingBlock.getType().toString().endsWith("_BED")) {
+                } else if (landingBlock.getType().toString().endsWith("_BED")) {
                     sd = sd * 0.5;
                 }
 
-                if(yDiff > 3) {
-                    if(e.getDamage() / sd < 0.9) { //Not enough damage
+                if (yDiff > 3) {
+                    if (e.getDamage() / sd < 0.9) { //Not enough damage
                         Notifier.notify(Notifier.Check.OTHER_NoFall, p, String.format("t: %s, y: %.2f d: %.2f sd: %.2f", "lessDmg", yDiff, e.getDamage(), sd));
-                        e.setDamage(yDiff-3);
+                        e.setDamage(yDiff - 3);
                         Punishment.freeze(p);
                     }
                 }
             }
         }
     }
-
 
 }
