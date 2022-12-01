@@ -2,9 +2,11 @@ package waterbased.anticheat.checks.movement;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -21,6 +23,10 @@ import java.util.List;
 
 public class CHECK_Flight implements Listener {
 
+    /*
+        TODO: Count in JumpBoost, SlowFalling,
+     */
+
     public enum VerticalDirection {
         UP, DOWN, NONE
     }
@@ -32,7 +38,6 @@ public class CHECK_Flight implements Listener {
     private static final HashMap<Player, List<Double>> vertMovements = new HashMap<>();
     private static final HashMap<Player, Double> lastYMove = new HashMap<>();
     private static final HashMap<Player, VerticalDirection> vertDirection = new HashMap<>();
-    private static final HashMap<Player, Long> playerTeleportGrace = new HashMap<>();
 
     @EventHandler
     public void onMove(PlayerPreciseMoveEvent e) {
@@ -50,13 +55,11 @@ public class CHECK_Flight implements Listener {
         if (e.getPlayer().isGliding()) {
             return;
         }
-        if (playerTeleportGrace.getOrDefault(e.getPlayer(), 0L) > AntiCheat.tick) {
-            return;
-        }
 
         if (e.getTo().getY() - lastGround.get(e.getPlayer()).getY() > 2.5) { //TODO: Consider JumpBoost Effect
             e.getPlayer().teleport(lastGround.get(e.getPlayer()));
             Punishment.freeze(e.getPlayer());
+            Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastGround.get(e.getPlayer()).getY()));
         }
 
         if (!vertMovements.containsKey(e.getPlayer())) vertMovements.put(e.getPlayer(), new ArrayList<>());
@@ -85,7 +88,7 @@ public class CHECK_Flight implements Listener {
         }
 
         /* No Y-Movement Check */
-        {
+        if(e.getPlayer().getLocation().getBlock().getType() != Material.SNOW) {
             double yDif = Math.abs(e.getFrom().getY() - e.getTo().getY());
             yDif = Math.round(yDif * 1000) / 1000.0;
             if (yDif <= 0.1) { //Moving horizontally without falling
@@ -156,6 +159,11 @@ public class CHECK_Flight implements Listener {
         } else {
             e.getPlayer().removePotionEffect(PotionEffectType.GLOWING);
         }
+    }
+
+    @EventHandler
+    public void onTeleport(PlayerTeleportEvent e) {
+        lastGround.put(e.getPlayer(), e.getTo());
     }
 
 }
