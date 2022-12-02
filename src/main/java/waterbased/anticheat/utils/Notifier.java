@@ -16,6 +16,8 @@ public class Notifier {
         MOVEMENT_Flight("Flight", "Flying in survival/adventure mode."),
         MOVEMENT_ElytraFlight("ElytraFlight", "Gliding like wearing a elytra without wearing it."),
 
+        MOVEMENT_Speed("Speed", "Move faster than allowed"),
+
         WORLD_BlockBreak("BlockBreak", "Breaking blocks illegally");
 
         private final String name;
