@@ -33,12 +33,13 @@ public class Punishment implements Listener {
         long startTick = AntiCheat.tick;
 
         new Thread(() -> {
+            Location to = p.getLocation().clone();
             while (!UtilCheat.isOnGround(p.getLocation()) && !p.isDead()) {
                 Bukkit.getScheduler().runTask(AntiCheat.instance, () -> {
                     double y = GRAVITY_CONST * ((AntiCheat.tick - startTick));
                     if (y > 3.92) y = 3.92;
 
-                    Location to = p.getLocation().subtract(0, y, 0);
+                    to.subtract(0, y, 0);
                     while (to.getBlock().isSolid()) {
                         to.add(0, 0.1, 0);
                     }
