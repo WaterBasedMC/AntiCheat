@@ -27,6 +27,12 @@ public class CHECK_Flight implements Listener {
 
     /*
         TODO: Count in JumpBoost, SlowFalling,
+
+        Issues:
+        - Walking on layer snow
+        - Walking on fence
+        - Walking on carpet
+
      */
 
     public enum VerticalDirection {
