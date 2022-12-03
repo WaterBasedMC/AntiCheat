@@ -12,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.util.Vector;
 import waterbased.anticheat.AntiCheat;
@@ -76,6 +77,11 @@ public class CHECK_Speed implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onTeleport(PlayerTeleportEvent e) {
+        tickGrace.put(e.getPlayer(), AntiCheat.tick + 2);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onRespawn(PlayerRespawnEvent e) {
         tickGrace.put(e.getPlayer(), AntiCheat.tick + 2);
     }
 
