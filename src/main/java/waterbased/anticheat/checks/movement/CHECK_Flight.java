@@ -67,7 +67,7 @@ public class CHECK_Flight implements Listener {
 
         if (e.getTo().getY() - lastGround.get(e.getPlayer()).getY() > 2.5) { //TODO: Consider JumpBoost Effect/SlimeBlocks
             e.getPlayer().teleport(lastGround.get(e.getPlayer()));
-            Punishment.freeze(e.getPlayer());
+            Punishment.pullDown(e.getPlayer());
             Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastGround.get(e.getPlayer()).getY()));
             return;
         }

@@ -50,7 +50,7 @@ public class Punishment implements Listener {
 
                 for(double d = 0; d <= y; d += 0.1) {
                     if(UtilBlock.isInSolidBlock(to.clone().subtract(0, d, 0))) {
-                        y = d;
+                        y = d-0.2;
                         pullDownTask.get(p).cancel();
                         punishing.remove(p);
                         break;
