@@ -407,14 +407,14 @@ public final class UtilCheat {
     }
 
     public static boolean isOnFence(Location loc) {
-        if (loc.subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_FENCE")) {
+        if (loc.clone().subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_FENCE")) {
             return true;
         }
-        if (loc.subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_FENCE_GATE")) {
-            Gate g = (Gate) loc.subtract(0, 0.51, 0).getBlock().getBlockData();
+        if (loc.clone().subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_FENCE_GATE")) {
+            Gate g = (Gate) loc.clone().subtract(0, 0.51, 0).getBlock().getBlockData();
             return !g.isOpen();
         }
-        return loc.subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_WALL");
+        return loc.clone().subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_WALL");
     }
 
     public static boolean isOnGround(Location loc) {

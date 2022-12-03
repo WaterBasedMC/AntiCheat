@@ -180,7 +180,7 @@ public class UtilBlock {
             Block = Location.getBlock();
             for (int y = (int) Location.getY(); y > 0; y--) {
                 Block Current = Location.getWorld().getBlockAt((int) Location.getX(), y, (int) Location.getZ());
-                Block Below = Current.getLocation().subtract(0.0D, 1.0D, 0.0D).getBlock();
+                Block Below = Current.getLocation().clone().subtract(0.0D, 1.0D, 0.0D).getBlock();
                 if ((Below == null) || (Below.getType().equals(Material.AIR))) {
                     Block = Current;
                 }
