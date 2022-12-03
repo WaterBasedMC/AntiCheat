@@ -1,5 +1,6 @@
 package waterbased.anticheat.utils;
 
+import jdk.jshell.execution.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -7,6 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import waterbased.anticheat.AntiCheat;
 
@@ -20,6 +22,8 @@ public class Punishment implements Listener {
 
     private static final HashSet<Player> punishing = new HashSet<>();
 
+    private static final HashMap<Player, BukkitTask> pullDownTask = new HashMap<>();
+
     public static boolean isBeeingPunished(Player p) {
         return punishing.contains(p);
     }
@@ -32,27 +36,31 @@ public class Punishment implements Listener {
         Vector v = new Vector(0, 0, 0);
         long startTick = AntiCheat.tick;
 
-        new Thread(() -> {
-            Location to = p.getLocation().clone();
-            while (!UtilCheat.isOnGround(p.getLocation()) && !p.isDead()) {
-                Bukkit.getScheduler().runTask(AntiCheat.instance, () -> {
-                    double y = GRAVITY_CONST * ((AntiCheat.tick - startTick));
-                    if (y > 3.92) y = 3.92;
-
-                    to.subtract(0, y, 0);
-                    while (to.getBlock().isSolid()) {
-                        to.add(0, 0.1, 0);
-                    }
-                    p.teleport(to, PlayerTeleportEvent.TeleportCause.PLUGIN);
-                });
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
+        Location to = p.getLocation().clone();
+        BukkitTask task = Bukkit.getScheduler().runTaskTimer(AntiCheat.instance, new Runnable() {
+            @Override
+            public void run() {
+                if(UtilCheat.isOnGround(p) || p.isDead()) {
+                    pullDownTask.get(p).cancel();
                     punishing.remove(p);
+                    return;
                 }
+                double y = GRAVITY_CONST * ((AntiCheat.tick - startTick));
+                if (y > 3.92) y = 3.92;
+
+                for(double d = 0; d <= y; d += 0.1) {
+                    if(UtilBlock.isInSolidBlock(to.clone().subtract(0, d, 0))) {
+                        y = d;
+                        pullDownTask.get(p).cancel();
+                        punishing.remove(p);
+                        break;
+                    }
+                }
+                to.subtract(0, y, 0);
+                p.teleport(to, PlayerTeleportEvent.TeleportCause.PLUGIN);
             }
-            punishing.remove(p);
-        }).start();
+        }, 0, 1);
+        pullDownTask.put(p, task);
     }
 
     public static void freeze(Player player) {

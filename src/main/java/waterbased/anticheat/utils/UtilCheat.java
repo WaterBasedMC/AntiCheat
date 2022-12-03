@@ -21,49 +21,68 @@ import java.util.regex.Pattern;
 
 public final class UtilCheat {
 
-    public static double getXDelta(Location one, Location two) {
-        return Math.abs(one.getX() - two.getX());
+    public static boolean blocksNear(Player player) {
+        return blocksNear(player.getLocation());
     }
 
-    public static boolean isDoor(Block block) {
-        return block.getType().toString().toLowerCase().contains("_door");
+    public static boolean blocksNear(final Location loc) {
+        boolean nearBlocks = false;
+        for (Block block : UtilBlock.getSurrounding(loc.getBlock(), true)) {
+            if (block.getType() != Material.AIR) {
+                nearBlocks = true;
+                break;
+            }
+        }
+        for (final Block block : UtilBlock.getSurrounding(loc.getBlock(), false)) {
+            if (block.getType() != Material.AIR) {
+                nearBlocks = true;
+                break;
+            }
+        }
+        loc.setY(loc.getY() - 0.5);
+        if (loc.getBlock().getType() != Material.AIR) {
+            nearBlocks = true;
+        }
+        List<Material> fences = Arrays.stream(Material.values()).filter(m -> m.toString().contains("FENCE") || m.toString().contains("_FENCE_GATE") || m == Material.LADDER).toList();
+        if (isBlock(loc.getBlock().getRelative(BlockFace.DOWN), fences.toArray(new Material[0]))) {
+            nearBlocks = true;
+        }
+        return nearBlocks;
     }
 
-    public static boolean isFenceGate(Block block) {
-        return block.getType().toString().toLowerCase().contains("_fence_gate");
+    public static boolean blocksNearNotDiagonal(final Location loc) {
+        boolean nearBlocks = false;
+        for (Block block : UtilBlock.getSurroundingB(loc.getBlock())) {
+            if (block.getType() != Material.AIR) {
+                nearBlocks = true;
+                break;
+            }
+        }
+        loc.setY(loc.getY() - 0.5);
+        if (loc.getBlock().getType() != Material.AIR) {
+            nearBlocks = true;
+        }
+        List<Material> fences = Arrays.stream(Material.values()).filter(m -> m.toString().contains("FENCE") || m.toString().contains("_FENCE_GATE") || m == Material.LADDER).toList();
+        if (isBlock(loc.getBlock().getRelative(BlockFace.DOWN), fences.toArray(new Material[0]))) {
+            nearBlocks = true;
+        }
+        return nearBlocks;
     }
 
-    public static boolean isTrapDoor(Block block) {
-        return block.getType().toString().toLowerCase().contains("_trapdoor");
+    public static boolean canStandOn(Block block) {
+        return (!block.isLiquid()) && (block.getType() != Material.AIR);
     }
 
-    public static double getZDelta(Location one, Location two) {
-        return Math.abs(one.getZ() - two.getZ());
+    public static boolean canStandWithin(Block block) {
+        boolean isSand = block.getType() == Material.SAND;
+        boolean isGravel = block.getType() == Material.GRAVEL;
+        boolean solid = (block.getType().isSolid()) && (!block.getType().name().toLowerCase().contains("door")) && (!block.getType().name().toLowerCase().contains("fence")) && (!block.getType().name().toLowerCase().contains("bars")) && (!block.getType().name().toLowerCase().contains("sign"));
+
+        return (!isSand) && (!isGravel) && (!solid);
     }
 
-    public static double getDistance3D(Location one, Location two) {
-        double xSqr = (two.getX() - one.getX()) * (two.getX() - one.getX());
-        double ySqr = (two.getY() - one.getY()) * (two.getY() - one.getY());
-        double zSqr = (two.getZ() - one.getZ()) * (two.getZ() - one.getZ());
-        double sqrt = Math.sqrt(xSqr + ySqr + zSqr);
-        return Math.abs(sqrt);
-    }
-
-    public static double getVerticalDistance(Location one, Location two) {
-        double toReturn;
-        double ySqr = (two.getY() - one.getY()) * (two.getY() - one.getY());
-        double sqrt = Math.sqrt(ySqr);
-        toReturn = Math.abs(sqrt);
-        return toReturn;
-    }
-
-    public static double getHorizontalDistance(Location one, Location two) {
-        double toReturn;
-        double xSqr = (two.getX() - one.getX()) * (two.getX() - one.getX());
-        double zSqr = (two.getZ() - one.getZ()) * (two.getZ() - one.getZ());
-        double sqrt = Math.sqrt(xSqr + zSqr);
-        toReturn = Math.abs(sqrt);
-        return toReturn;
+    public static boolean cantStandAt(Block block) {
+        return (!canStandOn(block)) && (cantStandClose(block)) && (cantStandFar(block));
     }
 
     public static boolean cantStandAtBetter(Block block) {
@@ -78,12 +97,13 @@ public final class UtilCheat {
         boolean northwest1 = otherBlock.getRelative(BlockFace.NORTH_WEST).getType() == Material.AIR;
         boolean southeast1 = otherBlock.getRelative(BlockFace.SOUTH_EAST).getType() == Material.AIR;
         boolean southwest1 = otherBlock.getRelative(BlockFace.SOUTH_WEST).getType() == Material.AIR;
-        boolean overAir1 = (otherBlock.getRelative(BlockFace.DOWN).getType() == Material.AIR)
-                || (otherBlock.getRelative(BlockFace.DOWN).getType() == Material.WATER)
-                || (otherBlock.getRelative(BlockFace.DOWN).getType() == Material.LAVA);
+        boolean overAir1 = (otherBlock.getRelative(BlockFace.DOWN).getType() == Material.AIR) || (otherBlock.getRelative(BlockFace.DOWN).getType() == Material.WATER) || (otherBlock.getRelative(BlockFace.DOWN).getType() == Material.LAVA);
 
-        return (center1) && (north1) && (east1) && (south1) && (west1) && (northeast1) && (southeast1) && (northwest1)
-                && (southwest1) && (overAir1);
+        return (center1) && (north1) && (east1) && (south1) && (west1) && (northeast1) && (southeast1) && (northwest1) && (southwest1) && (overAir1);
+    }
+
+    public static boolean cantStandAtExp(Location location) {
+        return cantStandAt(new Location(location.getWorld(), fixXAxis(location.getX()), location.getY() - 0.01D, location.getBlockZ()).getBlock());
     }
 
     public static boolean cantStandAtSingle(Block block) {
@@ -107,25 +127,12 @@ public final class UtilCheat {
         return (n) && (s) && (e) && (w) && (ne) && (nw) && (se) && (sw) && (isHover);
     }
 
-    public static boolean canStandWithin(Block block) {
-        boolean isSand = block.getType() == Material.SAND;
-        boolean isGravel = block.getType() == Material.GRAVEL;
-        boolean solid = (block.getType().isSolid()) && (!block.getType().name().toLowerCase().contains("door"))
-                && (!block.getType().name().toLowerCase().contains("fence"))
-                && (!block.getType().name().toLowerCase().contains("bars"))
-                && (!block.getType().name().toLowerCase().contains("sign"));
-
-        return (!isSand) && (!isGravel) && (!solid);
+    public static boolean cantStandClose(Block block) {
+        return (!canStandOn(block.getRelative(BlockFace.NORTH))) && (!canStandOn(block.getRelative(BlockFace.EAST))) && (!canStandOn(block.getRelative(BlockFace.SOUTH))) && (!canStandOn(block.getRelative(BlockFace.WEST)));
     }
 
-    public static Vector getRotation(Location one, Location two) {
-        double dx = two.getX() - one.getX();
-        double dy = two.getY() - one.getY();
-        double dz = two.getZ() - one.getZ();
-        double distanceXZ = Math.sqrt(dx * dx + dz * dz);
-        float yaw = (float) (Math.atan2(dz, dx) * 180.0D / 3.141592653589793D) - 90.0F;
-        float pitch = (float) -(Math.atan2(dy, distanceXZ) * 180.0D / 3.141592653589793D);
-        return new Vector(yaw, pitch, 0.0F);
+    public static boolean cantStandFar(Block block) {
+        return (!canStandOn(block.getRelative(BlockFace.NORTH_WEST))) && (!canStandOn(block.getRelative(BlockFace.NORTH_EAST))) && (!canStandOn(block.getRelative(BlockFace.SOUTH_WEST))) && (!canStandOn(block.getRelative(BlockFace.SOUTH_EAST)));
     }
 
     public static double clamp180(double theta) {
@@ -139,37 +146,23 @@ public final class UtilCheat {
         return theta;
     }
 
-    public static boolean cantStandAt(Block block) {
-        return (!canStandOn(block)) && (cantStandClose(block)) && (cantStandFar(block));
-    }
+    public static double[] cursor(Player player, LivingEntity entity) {
+        Location entityLoc = entity.getLocation().add(0.0D, entity.getEyeHeight(), 0.0D);
+        Location playerLoc = player.getLocation().add(0.0D, player.getEyeHeight(), 0.0D);
 
-    public static boolean cantStandAtExp(Location location) {
-        return cantStandAt(new Location(location.getWorld(), fixXAxis(location.getX()), location.getY() - 0.01D,
-                location.getBlockZ()).getBlock());
-    }
+        Vector playerRotation = new Vector(playerLoc.getYaw(), playerLoc.getPitch(), 0.0F);
+        Vector expectedRotation = getRotation(playerLoc, entityLoc);
 
-    public static boolean cantStandClose(Block block) {
-        return (!canStandOn(block.getRelative(BlockFace.NORTH))) && (!canStandOn(block.getRelative(BlockFace.EAST)))
-                && (!canStandOn(block.getRelative(BlockFace.SOUTH))) && (!canStandOn(block.getRelative(BlockFace.WEST)));
-    }
+        double deltaYaw = clamp180(playerRotation.getX() - expectedRotation.getX());
+        double deltaPitch = clamp180(playerRotation.getY() - expectedRotation.getY());
 
-    public static boolean cantStandFar(Block block) {
-        return (!canStandOn(block.getRelative(BlockFace.NORTH_WEST)))
-                && (!canStandOn(block.getRelative(BlockFace.NORTH_EAST)))
-                && (!canStandOn(block.getRelative(BlockFace.SOUTH_WEST)))
-                && (!canStandOn(block.getRelative(BlockFace.SOUTH_EAST)));
-    }
+        double horizontalDistance = getHorizontalDistance(playerLoc, entityLoc);
+        double distance = getDistance3D(playerLoc, entityLoc);
 
-    public static boolean canStandOn(Block block) {
-        return (!block.isLiquid()) && (block.getType() != Material.AIR);
-    }
+        double offsetX = deltaYaw * horizontalDistance * distance;
+        double offsetY = deltaPitch * Math.abs(Math.sqrt(entityLoc.getY() - playerLoc.getY())) * distance;
 
-    public static boolean isFullyInWater(Location player) {
-        double touchedX = fixXAxis(player.getX());
-
-        return (new Location(player.getWorld(), touchedX, player.getY(), player.getBlockZ()).getBlock().isLiquid())
-                && (new Location(player.getWorld(), touchedX, Math.round(player.getY()), player.getBlockZ()).getBlock()
-                .isLiquid());
+        return new double[]{Math.abs(offsetX), Math.abs(offsetY)};
     }
 
     public static double fixXAxis(double x) {
@@ -181,8 +174,255 @@ public final class UtilCheat {
         return touchedX;
     }
 
+    public static double getAimbotoffset(Location playerLocLoc, double playerEyeHeight, LivingEntity entity) {
+        Location entityLoc = entity.getLocation().add(0.0D, entity.getEyeHeight(), 0.0D);
+        Location playerLoc = playerLocLoc.add(0.0D, playerEyeHeight, 0.0D);
+
+        Vector playerRotation = new Vector(playerLoc.getYaw(), playerLoc.getPitch(), 0.0F);
+        Vector expectedRotation = getRotation(playerLoc, entityLoc);
+
+        double deltaYaw = clamp180(playerRotation.getX() - expectedRotation.getX());
+
+        double horizontalDistance = getHorizontalDistance(playerLoc, entityLoc);
+        double distance = getDistance3D(playerLoc, entityLoc);
+
+        double offsetX = deltaYaw * horizontalDistance * distance;
+
+        return offsetX;
+    }
+
+    public static double getAimbotoffset2(Location playerLocLoc, double playerEyeHeight, LivingEntity entity) {
+        Location entityLoc = entity.getLocation().add(0.0D, entity.getEyeHeight(), 0.0D);
+        Location playerLoc = playerLocLoc.add(0.0D, playerEyeHeight, 0.0D);
+
+        Vector playerRotation = new Vector(playerLoc.getYaw(), playerLoc.getPitch(), 0.0F);
+        Vector expectedRotation = getRotation(playerLoc, entityLoc);
+
+        double deltaPitch = clamp180(playerRotation.getY() - expectedRotation.getY());
+
+        double distance = getDistance3D(playerLoc, entityLoc);
+
+        double offsetY = deltaPitch * Math.abs(Math.sqrt(entityLoc.getY() - playerLoc.getY())) * distance;
+
+        return offsetY;
+    }
+
+    public static String getCardinalDirection(Player player) {
+        double rotation = (player.getLocation().getYaw() - 90) % 360;
+        if (rotation < 0) {
+            rotation += 360.0;
+        }
+        if (0 <= rotation && rotation < 22.5) {
+            return "N";
+        } else if (22.5 <= rotation && rotation < 67.5) {
+            return "NE";
+        } else if (67.5 <= rotation && rotation < 112.5) {
+            return "E";
+        } else if (112.5 <= rotation && rotation < 157.5) {
+            return "SE";
+        } else if (157.5 <= rotation && rotation < 202.5) {
+            return "S";
+        } else if (202.5 <= rotation && rotation < 247.5) {
+            return "SW";
+        } else if (247.5 <= rotation && rotation < 292.5) {
+            return "W";
+        } else if (292.5 <= rotation && rotation < 337.5) {
+            return "NW";
+        } else if (337.5 <= rotation && rotation < 360.0) {
+            return "N";
+        } else {
+            return null;
+        }
+    }
+
+    public static String[] getCommands(String command) {
+        return command.replaceAll("COMMAND\\[", "").replaceAll("]", "").split(";");
+    }
+
+    public static double getDistance3D(Location one, Location two) {
+        double xSqr = (two.getX() - one.getX()) * (two.getX() - one.getX());
+        double ySqr = (two.getY() - one.getY()) * (two.getY() - one.getY());
+        double zSqr = (two.getZ() - one.getZ()) * (two.getZ() - one.getZ());
+        double sqrt = Math.sqrt(xSqr + ySqr + zSqr);
+        return Math.abs(sqrt);
+    }
+
+    public static double getHorizontalDistance(Location one, Location two) {
+        double toReturn;
+        double xSqr = (two.getX() - one.getX()) * (two.getX() - one.getX());
+        double zSqr = (two.getZ() - one.getZ()) * (two.getZ() - one.getZ());
+        double sqrt = Math.sqrt(xSqr + zSqr);
+        toReturn = Math.abs(sqrt);
+        return toReturn;
+    }
+
+    public static double getOffsetOffCursor(Player player, LivingEntity entity) {
+        double offset = 0.0D;
+        double[] offsets = getOffsetsOffCursor(player, entity);
+
+        offset += offsets[0];
+        offset += offsets[1];
+
+        return offset;
+    }
+
+    public static double[] getOffsetsOffCursor(Player player, LivingEntity entity) {
+        Location entityLoc = entity.getLocation().add(0.0D, entity.getEyeHeight(), 0.0D);
+        Location playerLoc = player.getLocation().add(0.0D, player.getEyeHeight(), 0.0D);
+
+        Vector playerRotation = new Vector(playerLoc.getYaw(), playerLoc.getPitch(), 0.0F);
+        Vector expectedRotation = getRotation(playerLoc, entityLoc);
+
+        double deltaYaw = clamp180(playerRotation.getX() - expectedRotation.getX());
+        double deltaPitch = clamp180(playerRotation.getY() - expectedRotation.getY());
+
+        double horizontalDistance = getHorizontalDistance(playerLoc, entityLoc);
+        double distance = getDistance3D(playerLoc, entityLoc);
+
+        double offsetX = deltaYaw * horizontalDistance * distance;
+        double offsetY = deltaPitch * Math.abs(Math.sqrt(entityLoc.getY() - playerLoc.getY())) * distance;
+
+        return new double[]{Math.abs(offsetX), Math.abs(offsetY)};
+    }
+
+    public static Vector getRotation(Location one, Location two) {
+        double dx = two.getX() - one.getX();
+        double dy = two.getY() - one.getY();
+        double dz = two.getZ() - one.getZ();
+        double distanceXZ = Math.sqrt(dx * dx + dz * dz);
+        float yaw = (float) (Math.atan2(dz, dx) * 180.0D / 3.141592653589793D) - 90.0F;
+        float pitch = (float) -(Math.atan2(dy, distanceXZ) * 180.0D / 3.141592653589793D);
+        return new Vector(yaw, pitch, 0.0F);
+    }
+
+    public static double getVerticalDistance(Location one, Location two) {
+        double toReturn;
+        double ySqr = (two.getY() - one.getY()) * (two.getY() - one.getY());
+        double sqrt = Math.sqrt(ySqr);
+        toReturn = Math.abs(sqrt);
+        return toReturn;
+    }
+
+    public static double getXDelta(Location one, Location two) {
+        return Math.abs(one.getX() - two.getX());
+    }
+
+    public static double getZDelta(Location one, Location two) {
+        return Math.abs(one.getZ() - two.getZ());
+    }
+
+    public static boolean hasArmorEnchantment(Player player, Enchantment e) {
+        ItemStack[] arrayOfItemStack;
+        int j = (arrayOfItemStack = player.getInventory().getArmorContents()).length;
+        for (int i = 0; i < j; i++) {
+            ItemStack is = arrayOfItemStack[i];
+            if ((is != null) && (is.containsEnchantment(e))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isBlock(Block block, Material[] materials) {
+        Material type = block.getType();
+        Material[] arrayOfMaterial;
+        int j = (arrayOfMaterial = materials).length;
+        for (int i = 0; i < j; i++) {
+            Material m = arrayOfMaterial[i];
+            if (m == type) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isDoor(Block block) {
+        return block.getType().toString().toLowerCase().contains("_door");
+    }
+
+    public static boolean isDouble(String string) {
+        try {
+            Double.parseDouble(string);
+            return true;
+        } catch (Exception localException) {
+        }
+        return false;
+    }
+
+    public static boolean isFenceGate(Block block) {
+        return block.getType().toString().toLowerCase().contains("_fence_gate");
+    }
+
+    public static boolean isFood(Material m) {
+        return m.isEdible();
+    }
+
+    public static boolean isFullyInWater(Location player) {
+        double touchedX = fixXAxis(player.getX());
+
+        return (new Location(player.getWorld(), touchedX, player.getY(), player.getBlockZ()).getBlock().isLiquid()) && (new Location(player.getWorld(), touchedX, Math.round(player.getY()), player.getBlockZ()).getBlock().isLiquid());
+    }
+
+    public static boolean isHoveringOverWater(Location player, int blocks) {
+        for (int i = player.getBlockY(); i > player.getBlockY() - blocks; i--) {
+            Block newloc = new Location(player.getWorld(), player.getBlockX(), i, player.getBlockZ()).getBlock();
+            if (newloc.getType() != Material.AIR) {
+                return newloc.isLiquid();
+            }
+        }
+        return false;
+    }
+
+    public static boolean isHoveringOverWater(Location player) {
+        return isHoveringOverWater(player, 25);
+    }
+
+    public static boolean isInWater(Player player) {
+        return (player.getLocation().getBlock().isLiquid()) || (player.getLocation().getBlock().getRelative(BlockFace.DOWN).isLiquid()) || (player.getLocation().getBlock().getRelative(BlockFace.UP).isLiquid());
+    }
+
+    @SuppressWarnings("unlikely-arg-type")
+    public static boolean isInWeb(Player player) {
+        if (UtilBlock.getBlocksAroundCenter(player.getLocation(), 1).contains(Material.COBWEB)) {
+            return true;
+        }
+        return (player.getLocation().getBlock().getType() == Material.COBWEB) || (player.getLocation().clone().add(0.0D, 1.0D, 0.0D).getBlock().getType() == Material.COBWEB) || (player.getLocation().getBlock().getRelative(BlockFace.DOWN).getType() == Material.COBWEB) || (player.getLocation().getBlock().getRelative(BlockFace.UP).getType() == Material.COBWEB);
+    }
+
+    public static boolean isInstantBreak(Material m) {
+        return false;
+    }
+
+    public static boolean isInt(String string) {
+        try {
+            Integer.parseInt(string);
+            return true;
+        } catch (Exception localException) {
+        }
+        return false;
+    }
+
+    public static boolean isInteractable(Material m) {
+        return m.isInteractable();
+    }
+
+    public static boolean isOnFence(Location loc) {
+        if (loc.subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_FENCE")) {
+            return true;
+        }
+        if (loc.subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_FENCE_GATE")) {
+            Gate g = (Gate) loc.subtract(0, 0.51, 0).getBlock().getBlockData();
+            return !g.isOpen();
+        }
+        return loc.subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_WALL");
+    }
+
     public static boolean isOnGround(Location loc) {
         return isOnGround(loc, 0.05);
+    }
+
+    public static boolean isOnGround(Player p) {
+        return isOnGround(p.getLocation());
     }
 
     public static boolean isOnGround(Location locIn, double down) {
@@ -274,54 +514,19 @@ public final class UtilCheat {
         return false;
     }
 
-    public static boolean isHoveringOverWater(Location player, int blocks) {
-        for (int i = player.getBlockY(); i > player.getBlockY() - blocks; i--) {
-            Block newloc = new Location(player.getWorld(), player.getBlockX(), i, player.getBlockZ()).getBlock();
-            if (newloc.getType() != Material.AIR) {
-                return newloc.isLiquid();
-            }
-        }
-        return false;
+    public static boolean isOnLilyPad(Player player) {
+        return isOnLilyPad(player.getLocation());
     }
 
-    public static boolean isHoveringOverWater(Location player) {
-        return isHoveringOverWater(player, 25);
+    public static boolean isOnLilyPad(Location loc) {
+        Block block = loc.getBlock();
+        Material lily = Material.LILY_PAD;
+
+        return (block.getType() == lily) || (block.getRelative(BlockFace.NORTH).getType() == lily) || (block.getRelative(BlockFace.SOUTH).getType() == lily) || (block.getRelative(BlockFace.EAST).getType() == lily) || (block.getRelative(BlockFace.WEST).getType() == lily);
     }
 
-    public static boolean isInstantBreak(Material m) {
-        return false;
-    }
-
-    public static boolean isFood(Material m) {
-        return m.isEdible();
-    }
-
-    public static String getCardinalDirection(Player player) {
-        double rotation = (player.getLocation().getYaw() - 90) % 360;
-        if (rotation < 0) {
-            rotation += 360.0;
-        }
-        if (0 <= rotation && rotation < 22.5) {
-            return "N";
-        } else if (22.5 <= rotation && rotation < 67.5) {
-            return "NE";
-        } else if (67.5 <= rotation && rotation < 112.5) {
-            return "E";
-        } else if (112.5 <= rotation && rotation < 157.5) {
-            return "SE";
-        } else if (157.5 <= rotation && rotation < 202.5) {
-            return "S";
-        } else if (202.5 <= rotation && rotation < 247.5) {
-            return "SW";
-        } else if (247.5 <= rotation && rotation < 292.5) {
-            return "W";
-        } else if (292.5 <= rotation && rotation < 337.5) {
-            return "NW";
-        } else if (337.5 <= rotation && rotation < 360.0) {
-            return "N";
-        } else {
-            return null;
-        }
+    public static boolean isOnVine(Player player) {
+        return player.getLocation().getBlock().getType() == Material.VINE;
     }
 
     public static boolean isSlab(Block block) {
@@ -336,133 +541,43 @@ public final class UtilCheat {
         return block.getType().toString().toLowerCase().contains("_stairs");
     }
 
-    public static boolean isInteractable(Material m) {
-        return m.isInteractable();
-    }
-
-    public static boolean sprintFly(Player player) {
-        return (player.isSprinting()) || (player.isFlying());
-    }
-
-    public static boolean isOnLilyPad(Player player) {
-        return isOnLilyPad(player.getLocation());
-    }
-
-    public static boolean isOnLilyPad(Location loc) {
-        Block block = loc.getBlock();
-        Material lily = Material.LILY_PAD;
-
-        return (block.getType() == lily) || (block.getRelative(BlockFace.NORTH).getType() == lily)
-                || (block.getRelative(BlockFace.SOUTH).getType() == lily)
-                || (block.getRelative(BlockFace.EAST).getType() == lily)
-                || (block.getRelative(BlockFace.WEST).getType() == lily);
-    }
-
-    public static boolean isOnFence(Location loc) {
-        if(loc.subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_FENCE")) {
-            return true;
-        }
-        if(loc.subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_FENCE_GATE")) {
-            Gate g = (Gate) loc.subtract(0, 0.51, 0).getBlock().getBlockData();
-            return !g.isOpen();
-        }
-        if(loc.subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_WALL")) {
-            return true;
-        }
-        return false;
-    }
-
-
     public static boolean isSubmersed(Player player) {
-        return (player.getLocation().getBlock().isLiquid())
-                && (player.getLocation().getBlock().getRelative(BlockFace.UP).isLiquid());
+        return (player.getLocation().getBlock().isLiquid()) && (player.getLocation().getBlock().getRelative(BlockFace.UP).isLiquid());
     }
 
-    public static boolean isInWater(Player player) {
-        return (player.getLocation().getBlock().isLiquid())
-                || (player.getLocation().getBlock().getRelative(BlockFace.DOWN).isLiquid())
-                || (player.getLocation().getBlock().getRelative(BlockFace.UP).isLiquid());
+    public static boolean isTrapDoor(Block block) {
+        return block.getType().toString().toLowerCase().contains("_trapdoor");
     }
 
-    @SuppressWarnings("unlikely-arg-type")
-    public static boolean isInWeb(Player player) {
-        if (UtilBlock.getBlocksAroundCenter(player.getLocation(), 1).contains(Material.COBWEB)) {
-            return true;
+    public static long lifeToSeconds(String string) {
+        if ((string.equals("0")) || (string.equals(""))) {
+            return 0L;
         }
-        return (player.getLocation().getBlock().getType() == Material.COBWEB)
-                || (player.getLocation().clone().add(0.0D, 1.0D, 0.0D).getBlock().getType() == Material.COBWEB)
-                || (player.getLocation().getBlock().getRelative(BlockFace.DOWN).getType() == Material.COBWEB)
-                || (player.getLocation().getBlock().getRelative(BlockFace.UP).getType() == Material.COBWEB);
-    }
-
-    public static boolean isOnVine(Player player) {
-        return player.getLocation().getBlock().getType() == Material.VINE;
-    }
-
-    public static boolean isInt(String string) {
-        try {
-            Integer.parseInt(string);
-            return true;
-        } catch (Exception localException) {
-        }
-        return false;
-    }
-
-    public static boolean isDouble(String string) {
-        try {
-            Double.parseDouble(string);
-            return true;
-        } catch (Exception localException) {
-        }
-        return false;
-    }
-
-    public static boolean blocksNear(Player player) {
-        return blocksNear(player.getLocation());
-    }
-
-    public static boolean blocksNear(final Location loc) {
-        boolean nearBlocks = false;
-        for (Block block : UtilBlock.getSurrounding(loc.getBlock(), true)) {
-            if (block.getType() != Material.AIR) {
-                nearBlocks = true;
-                break;
+        String[] lifeMatch = {"d", "h", "m", "s"};
+        int[] lifeInterval = {86400, 3600, 60, 1};
+        long seconds = 0L;
+        for (int i = 0; i < lifeMatch.length; i++) {
+            Matcher matcher = Pattern.compile("([0-9]*)" + lifeMatch[i]).matcher(string);
+            while (matcher.find()) {
+                seconds += (long) Integer.parseInt(matcher.group(1)) * lifeInterval[i];
             }
         }
-        for (final Block block : UtilBlock.getSurrounding(loc.getBlock(), false)) {
-            if (block.getType() != Material.AIR) {
-                nearBlocks = true;
-                break;
-            }
-        }
-        loc.setY(loc.getY() - 0.5);
-        if (loc.getBlock().getType() != Material.AIR) {
-            nearBlocks = true;
-        }
-        List<Material> fences = Arrays.stream(Material.values()).filter(m -> m.toString().contains("FENCE") || m.toString().contains("_FENCE_GATE") || m == Material.LADDER).toList();
-        if (isBlock(loc.getBlock().getRelative(BlockFace.DOWN), fences.toArray(new Material[0]))) {
-            nearBlocks = true;
-        }
-        return nearBlocks;
+        return seconds;
     }
 
-    public static boolean blocksNearNotDiagonal(final Location loc) {
-        boolean nearBlocks = false;
-        for (Block block : UtilBlock.getSurroundingB(loc.getBlock())) {
-            if (block.getType() != Material.AIR) {
-                nearBlocks = true;
-                break;
+    public static String listToCommaString(List<String> list) {
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < list.size(); i++) {
+            b.append(list.get(i));
+            if (i < list.size() - 1) {
+                b.append(",");
             }
         }
-        loc.setY(loc.getY() - 0.5);
-        if (loc.getBlock().getType() != Material.AIR) {
-            nearBlocks = true;
-        }
-        List<Material> fences = Arrays.stream(Material.values()).filter(m -> m.toString().contains("FENCE") || m.toString().contains("_FENCE_GATE") || m == Material.LADDER).toList();
-        if (isBlock(loc.getBlock().getRelative(BlockFace.DOWN), fences.toArray(new Material[0]))) {
-            nearBlocks = true;
-        }
-        return nearBlocks;
+        return b.toString();
+    }
+
+    public static String removeWhitespace(String string) {
+        return string.replaceAll(" ", "");
     }
 
     public static boolean slabsNear(Location loc) {
@@ -485,145 +600,8 @@ public final class UtilCheat {
         return nearBlocks;
     }
 
-    public static boolean isBlock(Block block, Material[] materials) {
-        Material type = block.getType();
-        Material[] arrayOfMaterial;
-        int j = (arrayOfMaterial = materials).length;
-        for (int i = 0; i < j; i++) {
-            Material m = arrayOfMaterial[i];
-            if (m == type) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static String[] getCommands(String command) {
-        return command.replaceAll("COMMAND\\[", "").replaceAll("]", "").split(";");
-    }
-
-    public static String removeWhitespace(String string) {
-        return string.replaceAll(" ", "");
-    }
-
-    public static boolean hasArmorEnchantment(Player player, Enchantment e) {
-        ItemStack[] arrayOfItemStack;
-        int j = (arrayOfItemStack = player.getInventory().getArmorContents()).length;
-        for (int i = 0; i < j; i++) {
-            ItemStack is = arrayOfItemStack[i];
-            if ((is != null) && (is.containsEnchantment(e))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static String listToCommaString(List<String> list) {
-        StringBuilder b = new StringBuilder();
-        for (int i = 0; i < list.size(); i++) {
-            b.append(list.get(i));
-            if (i < list.size() - 1) {
-                b.append(",");
-            }
-        }
-        return b.toString();
-    }
-
-    public static long lifeToSeconds(String string) {
-        if ((string.equals("0")) || (string.equals(""))) {
-            return 0L;
-        }
-        String[] lifeMatch = {"d", "h", "m", "s"};
-        int[] lifeInterval = {86400, 3600, 60, 1};
-        long seconds = 0L;
-        for (int i = 0; i < lifeMatch.length; i++) {
-            Matcher matcher = Pattern.compile("([0-9]*)" + lifeMatch[i]).matcher(string);
-            while (matcher.find()) {
-                seconds += (long) Integer.parseInt(matcher.group(1)) * lifeInterval[i];
-            }
-        }
-        return seconds;
-    }
-
-    public static double[] cursor(Player player, LivingEntity entity) {
-        Location entityLoc = entity.getLocation().add(0.0D, entity.getEyeHeight(), 0.0D);
-        Location playerLoc = player.getLocation().add(0.0D, player.getEyeHeight(), 0.0D);
-
-        Vector playerRotation = new Vector(playerLoc.getYaw(), playerLoc.getPitch(), 0.0F);
-        Vector expectedRotation = getRotation(playerLoc, entityLoc);
-
-        double deltaYaw = clamp180(playerRotation.getX() - expectedRotation.getX());
-        double deltaPitch = clamp180(playerRotation.getY() - expectedRotation.getY());
-
-        double horizontalDistance = getHorizontalDistance(playerLoc, entityLoc);
-        double distance = getDistance3D(playerLoc, entityLoc);
-
-        double offsetX = deltaYaw * horizontalDistance * distance;
-        double offsetY = deltaPitch * Math.abs(Math.sqrt(entityLoc.getY() - playerLoc.getY())) * distance;
-
-        return new double[]{Math.abs(offsetX), Math.abs(offsetY)};
-    }
-
-    public static double getAimbotoffset(Location playerLocLoc, double playerEyeHeight, LivingEntity entity) {
-        Location entityLoc = entity.getLocation().add(0.0D, entity.getEyeHeight(), 0.0D);
-        Location playerLoc = playerLocLoc.add(0.0D, playerEyeHeight, 0.0D);
-
-        Vector playerRotation = new Vector(playerLoc.getYaw(), playerLoc.getPitch(), 0.0F);
-        Vector expectedRotation = getRotation(playerLoc, entityLoc);
-
-        double deltaYaw = clamp180(playerRotation.getX() - expectedRotation.getX());
-
-        double horizontalDistance = getHorizontalDistance(playerLoc, entityLoc);
-        double distance = getDistance3D(playerLoc, entityLoc);
-
-        double offsetX = deltaYaw * horizontalDistance * distance;
-
-        return offsetX;
-    }
-
-    public static double getAimbotoffset2(Location playerLocLoc, double playerEyeHeight, LivingEntity entity) {
-        Location entityLoc = entity.getLocation().add(0.0D, entity.getEyeHeight(), 0.0D);
-        Location playerLoc = playerLocLoc.add(0.0D, playerEyeHeight, 0.0D);
-
-        Vector playerRotation = new Vector(playerLoc.getYaw(), playerLoc.getPitch(), 0.0F);
-        Vector expectedRotation = getRotation(playerLoc, entityLoc);
-
-        double deltaPitch = clamp180(playerRotation.getY() - expectedRotation.getY());
-
-        double distance = getDistance3D(playerLoc, entityLoc);
-
-        double offsetY = deltaPitch * Math.abs(Math.sqrt(entityLoc.getY() - playerLoc.getY())) * distance;
-
-        return offsetY;
-    }
-
-    public static double[] getOffsetsOffCursor(Player player, LivingEntity entity) {
-        Location entityLoc = entity.getLocation().add(0.0D, entity.getEyeHeight(), 0.0D);
-        Location playerLoc = player.getLocation().add(0.0D, player.getEyeHeight(), 0.0D);
-
-        Vector playerRotation = new Vector(playerLoc.getYaw(), playerLoc.getPitch(), 0.0F);
-        Vector expectedRotation = getRotation(playerLoc, entityLoc);
-
-        double deltaYaw = clamp180(playerRotation.getX() - expectedRotation.getX());
-        double deltaPitch = clamp180(playerRotation.getY() - expectedRotation.getY());
-
-        double horizontalDistance = getHorizontalDistance(playerLoc, entityLoc);
-        double distance = getDistance3D(playerLoc, entityLoc);
-
-        double offsetX = deltaYaw * horizontalDistance * distance;
-        double offsetY = deltaPitch * Math.abs(Math.sqrt(entityLoc.getY() - playerLoc.getY())) * distance;
-
-        return new double[]{Math.abs(offsetX), Math.abs(offsetY)};
-    }
-
-    public static double getOffsetOffCursor(Player player, LivingEntity entity) {
-        double offset = 0.0D;
-        double[] offsets = getOffsetsOffCursor(player, entity);
-
-        offset += offsets[0];
-        offset += offsets[1];
-
-        return offset;
+    public static boolean sprintFly(Player player) {
+        return (player.isSprinting()) || (player.isFlying());
     }
 
 }

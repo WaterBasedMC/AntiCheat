@@ -15,45 +15,49 @@ import java.util.HashSet;
 
 public class UtilBlock {
 
-    public static HashSet<Byte> blockPassSet = new HashSet<Byte>();
-    public static HashSet<Material> blockSolidSet = new HashSet<Material>();
+    private static final HashSet<Material> matClimbable = new HashSet<>();
 
-    public static Block getLowestBlockAt(Location Location) {
-        Block Block = Location.getWorld().getBlockAt((int) Location.getX(), 0, (int) Location.getZ());
-        if ((Block == null) || (Block.getType().equals(Material.AIR))) {
-            Block = Location.getBlock();
-            for (int y = (int) Location.getY(); y > 0; y--) {
-                Block Current = Location.getWorld().getBlockAt((int) Location.getX(), y, (int) Location.getZ());
-                Block Below = Current.getLocation().subtract(0.0D, 1.0D, 0.0D).getBlock();
-                if ((Below == null) || (Below.getType().equals(Material.AIR))) {
-                    Block = Current;
-                }
-            }
-        }
-        return Block;
+    static {
+        matClimbable.add(Material.VINE);
+        matClimbable.add(Material.LADDER);
+        matClimbable.add(Material.SCAFFOLDING);
+        matClimbable.add(Material.WEEPING_VINES);
+        matClimbable.add(Material.WEEPING_VINES_PLANT);
+        matClimbable.add(Material.TWISTING_VINES);
+        matClimbable.add(Material.TWISTING_VINES_PLANT);
+        matClimbable.add(Material.GLOW_BERRIES);
+        // & All trapdoors (see isClimbableBlock)
     }
 
-    public static boolean isLiquid(Block block) {
-        return block != null && (block.getType() == Material.WATER || block.getType() == Material.LAVA);
+    public static String LocationToString(Location Location) {
+        return Location.getWorld().getName() + "," + Location.getX() + "," + Location.getY() + "," + Location.getZ()
+                + "," + Location.getPitch() + "," + Location.getYaw();
     }
 
-    public static boolean isCarpet(Block material) {
-        return material.getType().toString().contains("_CARPET");
+    public static Location StringToLocation(String Key) {
+        String[] Args = Key.split(",");
+        World World = Bukkit.getWorld(Args[0]);
+        double X = Double.parseDouble(Args[1]);
+        double Y = Double.parseDouble(Args[2]);
+        double Z = Double.parseDouble(Args[3]);
+        float Pitch = Float.parseFloat(Args[4]);
+        float Yaw = Float.parseFloat(Args[5]);
+        return new Location(World, X, Y, Z, Pitch, Yaw);
     }
 
-    public static boolean containsBlock(Location Location, Material Material) {
-        for (int y = 0; y < 256; y++) {
-            Block Current = Location.getWorld().getBlockAt((int) Location.getX(), y, (int) Location.getZ());
-            if ((Current != null) && (Current.getType().equals(Material))) {
+    public static boolean containsBlock(Location location, Material material) {
+        for (int y = 0; y < location.getWorld().getMaxHeight(); y++) {
+            Block Current = location.getWorld().getBlockAt((int) location.getX(), y, (int) location.getZ());
+            if ((Current != null) && (Current.getType().equals(material))) {
                 return true;
             }
         }
         return false;
     }
 
-    public static boolean containsBlock(Location Location) {
-        for (int y = 0; y < 256; y++) {
-            Block Current = Location.getWorld().getBlockAt((int) Location.getX(), y, (int) Location.getZ());
+    public static boolean containsBlock(Location location) {
+        for (int y = 0; y < location.getWorld().getMaxHeight(); y++) {
+            Block Current = location.getWorld().getBlockAt((int) location.getX(), y, (int) location.getZ());
             if ((Current != null) && (!Current.getType().equals(Material.AIR))) {
                 return true;
             }
@@ -61,14 +65,39 @@ public class UtilBlock {
         return false;
     }
 
-    public static boolean containsBlockBelow(Location Location) {
-        for (int y = 0; y < (int) Location.getY(); y++) {
-            Block Current = Location.getWorld().getBlockAt((int) Location.getX(), y, (int) Location.getZ());
+    public static boolean containsBlockBelow(Location location) {
+        for (int y = 0; y < (int) location.getY(); y++) {
+            Block Current = location.getWorld().getBlockAt((int) location.getX(), y, (int) location.getZ());
             if ((Current != null) && (!Current.getType().equals(Material.AIR))) {
                 return true;
             }
         }
         return false;
+    }
+
+    public static Location deserializeLocation(String string) {
+        if (string == null) {
+            return null;
+        }
+        String[] parts = string.split(",");
+        World world = Bukkit.getServer().getWorld(parts[0]);
+        Double LX = Double.valueOf(Double.parseDouble(parts[1]));
+        Double LY = Double.valueOf(Double.parseDouble(parts[2]));
+        Double LZ = Double.valueOf(Double.parseDouble(parts[3]));
+        Float P = Float.valueOf(Float.parseFloat(parts[4]));
+        Float Y = Float.valueOf(Float.parseFloat(parts[5]));
+        Location result = new Location(world, LX.doubleValue(), LY.doubleValue(), LZ.doubleValue());
+        result.setPitch(P.floatValue());
+        result.setYaw(Y.floatValue());
+        return result;
+    }
+
+    public static boolean fullSolid(Block block) {
+        if (block == null) {
+            return false;
+        }
+        return isSolid(block) && block.getBoundingBox().getWidthX() == 1.0D
+                && block.getBoundingBox().getWidthZ() == 1.0D && block.getBoundingBox().getHeight() == 1.0D;
     }
 
     public static ArrayList<Block> getBlocksAroundCenter(Location loc, int radius) {
@@ -86,36 +115,20 @@ public class UtilBlock {
         return blocks;
     }
 
-    public static Location StringToLocation(String Key) {
-        String[] Args = Key.split(",");
-        World World = Bukkit.getWorld(Args[0]);
-        double X = Double.parseDouble(Args[1]);
-        double Y = Double.parseDouble(Args[2]);
-        double Z = Double.parseDouble(Args[3]);
-        float Pitch = Float.parseFloat(Args[4]);
-        float Yaw = Float.parseFloat(Args[5]);
-        return new Location(World, X, Y, Z, Pitch, Yaw);
+    public static Block getHighest(Location locaton) {
+        return getHighest(locaton, null);
     }
 
-    public static String LocationToString(Location Location) {
-        return Location.getWorld().getName() + "," + Location.getX() + "," + Location.getY() + "," + Location.getZ()
-                + "," + Location.getPitch() + "," + Location.getYaw();
-    }
-
-    public static boolean isSolid(Block b) {
-        return b.getType().isSolid() && b.getType().isBlock() && b.getType().isCollidable();
-    }
-
-    public static boolean fullSolid(Block block) {
-        if (block == null) {
-            return false;
+    public static Block getHighest(Location location, HashSet<Material> ignore) {
+        Location loc = location;
+        loc.setY(0);
+        for (int i = 0; i < loc.getWorld().getMaxHeight(); i++) {
+            loc.setY(loc.getWorld().getMaxHeight() - i);
+            if (isSolid(loc.getBlock())) {
+                break;
+            }
         }
-        return isSolid(block) && block.getBoundingBox().getWidthX() == 1.0D
-                && block.getBoundingBox().getWidthZ() == 1.0D && block.getBoundingBox().getHeight() == 1.0D;
-    }
-
-    public static boolean isInteractable(Block block) {
-        return block.getType().isInteractable();
+        return loc.getBlock().getRelative(BlockFace.UP);
     }
 
     public static HashMap<Block, Double> getInRadius(Location loc, double dR) {
@@ -161,35 +174,19 @@ public class UtilBlock {
         return blockList;
     }
 
-    public static boolean isBlock(ItemStack item) {
-        return item.getType().isBlock();
-    }
-
-    public static Block getHighest(Location locaton) {
-        return getHighest(locaton, null);
-    }
-
-    public static Block getHighest(Location location, HashSet<Material> ignore) {
-        Location loc = location;
-        loc.setY(0);
-        for (int i = 0; i < loc.getWorld().getMaxHeight(); i++) {
-            loc.setY(loc.getWorld().getMaxHeight() - i);
-            if (isSolid(loc.getBlock())) {
-                break;
+    public static Block getLowestBlockAt(Location Location) {
+        Block Block = Location.getWorld().getBlockAt((int) Location.getX(), 0, (int) Location.getZ());
+        if ((Block == null) || (Block.getType().equals(Material.AIR))) {
+            Block = Location.getBlock();
+            for (int y = (int) Location.getY(); y > 0; y--) {
+                Block Current = Location.getWorld().getBlockAt((int) Location.getX(), y, (int) Location.getZ());
+                Block Below = Current.getLocation().subtract(0.0D, 1.0D, 0.0D).getBlock();
+                if ((Below == null) || (Below.getType().equals(Material.AIR))) {
+                    Block = Current;
+                }
             }
         }
-        return loc.getBlock().getRelative(BlockFace.UP);
-    }
-
-    public static boolean isInAir(Player player) {
-        boolean nearBlocks = false;
-        for (Block block : getSurrounding(player.getLocation().getBlock(), true)) {
-            if (block.getType() != Material.AIR) {
-                nearBlocks = true;
-                break;
-            }
-        }
-        return nearBlocks;
+        return Block;
     }
 
     public static ArrayList<Block> getSurrounding(Block block, boolean diagonals) {
@@ -264,30 +261,43 @@ public class UtilBlock {
         return blocks;
     }
 
-    public static String serializeLocation(Location location) {
-        int X = (int) location.getX();
-        int Y = (int) location.getY();
-        int Z = (int) location.getZ();
-        int P = (int) location.getPitch();
-        int Yaw = (int) location.getYaw();
-        return location.getWorld().getName() + "," + X + "," + Y + "," + Z + "," + P + "," + Yaw;
+    public static boolean isBlock(ItemStack item) {
+        return item.getType().isBlock();
     }
 
-    public static Location deserializeLocation(String string) {
-        if (string == null) {
-            return null;
+    public static boolean isCarpet(Block material) {
+        return material.getType().toString().contains("_CARPET");
+    }
+
+    public static boolean isClimbableBlock(Block block) {
+        return matClimbable.contains(block.getType()) || (block.getType().toString().endsWith("_TRAPDOOR") && matClimbable.contains(block.getRelative(BlockFace.DOWN).getType()));
+    }
+
+    public static boolean isInAir(Player player) {
+        boolean nearBlocks = false;
+        for (Block block : getSurrounding(player.getLocation().getBlock(), true)) {
+            if (block.getType() != Material.AIR) {
+                nearBlocks = true;
+                break;
+            }
         }
-        String[] parts = string.split(",");
-        World world = Bukkit.getServer().getWorld(parts[0]);
-        Double LX = Double.valueOf(Double.parseDouble(parts[1]));
-        Double LY = Double.valueOf(Double.parseDouble(parts[2]));
-        Double LZ = Double.valueOf(Double.parseDouble(parts[3]));
-        Float P = Float.valueOf(Float.parseFloat(parts[4]));
-        Float Y = Float.valueOf(Float.parseFloat(parts[5]));
-        Location result = new Location(world, LX.doubleValue(), LY.doubleValue(), LZ.doubleValue());
-        result.setPitch(P.floatValue());
-        result.setYaw(Y.floatValue());
-        return result;
+        return nearBlocks;
+    }
+
+    public static boolean isInSolidBlock(Location loc) {
+        return isSolid(loc.getBlock());
+    }
+
+    public static boolean isInteractable(Block block) {
+        return block.getType().isInteractable();
+    }
+
+    public static boolean isLiquid(Block block) {
+        return block != null && (block.getType() == Material.WATER || block.getType() == Material.LAVA);
+    }
+
+    public static boolean isSolid(Block b) {
+        return b.getType().isSolid() && b.getType().isBlock() && b.getType().isCollidable();
     }
 
     public static boolean isVisible(Block block) {
@@ -299,22 +309,13 @@ public class UtilBlock {
         return false;
     }
 
-    private static HashSet<Material> matClimbable = new HashSet<>();
-
-    static {
-        matClimbable.add(Material.VINE);
-        matClimbable.add(Material.LADDER);
-        matClimbable.add(Material.SCAFFOLDING);
-        matClimbable.add(Material.WEEPING_VINES);
-        matClimbable.add(Material.WEEPING_VINES_PLANT);
-        matClimbable.add(Material.TWISTING_VINES);
-        matClimbable.add(Material.TWISTING_VINES_PLANT);
-        matClimbable.add(Material.GLOW_BERRIES);
-        // & All trapdoors (see isClimbableBlock)
-    }
-
-    public static boolean isClimbableBlock(Block block) {
-        return matClimbable.contains(block.getType()) || (block.getType().toString().endsWith("_TRAPDOOR") && matClimbable.contains(block.getRelative(BlockFace.DOWN).getType()));
+    public static String serializeLocation(Location location) {
+        int X = (int) location.getX();
+        int Y = (int) location.getY();
+        int Z = (int) location.getZ();
+        int P = (int) location.getPitch();
+        int Yaw = (int) location.getYaw();
+        return location.getWorld().getName() + "," + X + "," + Y + "," + Z + "," + P + "," + Yaw;
     }
 
 }

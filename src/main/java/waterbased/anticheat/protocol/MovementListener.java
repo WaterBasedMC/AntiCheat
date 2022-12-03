@@ -82,7 +82,7 @@ public class MovementListener {
                 Bukkit.getScheduler().runTask(AntiCheat.instance, new Runnable() {
                     @Override
                     public void run() {
-                        Bukkit.getPluginManager().callEvent(new PlayerPreciseMoveEvent(e.getPlayer(), lastLocation.getOrDefault(e.getPlayer(), finLoc), finLoc, finOnGround));
+                        Bukkit.getPluginManager().callEvent(new PlayerPreciseMoveEvent(e.getPlayer(), lastLocation.getOrDefault(e.getPlayer(), finLoc.clone()), finLoc.clone(), finOnGround));
                         if (lastOnGroundState.getOrDefault(e.getPlayer(), false) != finOnGround) {
                             Bukkit.getPluginManager().callEvent(new PlayerOnGroundChangeEvent(e.getPlayer(), finOnGround));
                             lastOnGroundState.put(e.getPlayer(), finOnGround);

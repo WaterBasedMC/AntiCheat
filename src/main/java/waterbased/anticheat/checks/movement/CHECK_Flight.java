@@ -32,8 +32,6 @@ public class CHECK_Flight implements Listener {
 
         Issues:
         - Walking on layer snow
-        - Walking on fence
-        - Walking on carpet
 
      */
 
@@ -67,7 +65,7 @@ public class CHECK_Flight implements Listener {
             return;
         }
 
-        if (e.getTo().getY() - lastGround.get(e.getPlayer()).getY() > 2.5) { //TODO: Consider JumpBoost Effect
+        if (e.getTo().getY() - lastGround.get(e.getPlayer()).getY() > 2.5) { //TODO: Consider JumpBoost Effect/SlimeBlocks
             e.getPlayer().teleport(lastGround.get(e.getPlayer()));
             Punishment.freeze(e.getPlayer());
             Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastGround.get(e.getPlayer()).getY()));
