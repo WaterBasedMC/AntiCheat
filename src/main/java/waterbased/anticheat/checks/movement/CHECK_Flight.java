@@ -8,9 +8,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import waterbased.anticheat.events.PlayerOnGroundChangeEvent;
 import waterbased.anticheat.events.PlayerPreciseMoveEvent;
 import waterbased.anticheat.utils.Notifier;
@@ -53,7 +50,10 @@ public class CHECK_Flight implements Listener {
             return;
         }
 
-        if (UtilCheat.isOnGround(e.getTo()) || e.getPlayer().getAllowFlight() || !lastGround.containsKey(e.getPlayer()) || e.getPlayer().getVehicle() != null) {
+        if (UtilCheat.isOnGround(e.getTo())
+                || e.getPlayer().getAllowFlight()
+                || !lastGround.containsKey(e.getPlayer())
+                || e.getPlayer().getVehicle() != null) {
             lastGround.put(e.getPlayer(), e.getTo());
             onGroundGrace.put(e.getPlayer(), 0);
             noYGrace.put(e.getPlayer(), 0);
@@ -65,19 +65,59 @@ public class CHECK_Flight implements Listener {
             return;
         }
 
-        if (e.getTo().getY() - lastGround.get(e.getPlayer()).getY() > 2.5) { //TODO: Consider JumpBoost Effect/SlimeBlocks
-            e.getPlayer().teleport(lastGround.get(e.getPlayer()));
-            Punishment.pullDown(e.getPlayer());
-            Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastGround.get(e.getPlayer()).getY()));
-            return;
-        }
+        checkMovementDirection(e); //Not a check only for clearing of graces.
 
+        if (checkMaxHeight(e)) return;
+        if (checkNoYMovement(e)) return;
+        if(checkVerticalMovement(e)) return;
+
+
+    }
+
+    private static boolean checkVerticalMovement(PlayerPreciseMoveEvent e) {
         if (!vertMovements.containsKey(e.getPlayer())) vertMovements.put(e.getPlayer(), new ArrayList<>());
         vertMovements.get(e.getPlayer()).add(Math.abs(e.getFrom().getY() - e.getTo().getY()));
         if (vertMovements.get(e.getPlayer()).size() > 15) vertMovements.get(e.getPlayer()).remove(0);
 
-        if (!vertDirection.containsKey(e.getPlayer())) vertDirection.put(e.getPlayer(), VerticalDirection.NONE);
+        List<Double> ys = vertMovements.get(e.getPlayer());
+        if (ys.size() >= 5) {
+            double sum = 0;
+            for (Double d : ys) {
+                sum += d;
+            }
+            sum /= ys.size();
 
+            if (lastYMove.containsKey(e.getPlayer())) {
+                double lym = lastYMove.get(e.getPlayer());
+                if (e.getFrom().getY() > e.getTo().getY()) { //Falling
+                    if (lym >= sum) { //Not accelerating!
+                        sumGrace.put(e.getPlayer(), sumGrace.getOrDefault(e.getPlayer(), 0) + 1);
+                        if (sumGrace.get(e.getPlayer()) >= GRACE_YSUM_COUNT) {
+                            Punishment.pullDown(e.getPlayer());
+                            Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: fna, s0: %.2f, s1: %.2f", lym, sum));
+                            return true;
+                        }
+                    }
+                } else if (e.getFrom().getY() < e.getTo().getY()) { //Rising
+                    if (lym <= sum) {
+                        sumGrace.put(e.getPlayer(), sumGrace.getOrDefault(e.getPlayer(), 0) + 1);
+                        if (sumGrace.get(e.getPlayer()) >= GRACE_YSUM_COUNT) {
+                            Punishment.pullDown(e.getPlayer());
+                            Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: nsd, s0: %.2f, s1: %.2f", lym, sum));
+                            return true;
+                        }
+                    }
+                }
+            }
+            lastYMove.put(e.getPlayer(), sum);
+        }
+
+        return false;
+
+    }
+
+    private static void checkMovementDirection(PlayerPreciseMoveEvent e) {
+        if (!vertDirection.containsKey(e.getPlayer())) vertDirection.put(e.getPlayer(), VerticalDirection.NONE);
         boolean changedDirection = false;
         if (e.getFrom().getY() > e.getTo().getY() && vertDirection.get(e.getPlayer()) != VerticalDirection.DOWN) {
             vertDirection.put(e.getPlayer(), VerticalDirection.DOWN);
@@ -96,8 +136,19 @@ public class CHECK_Flight implements Listener {
             sumGrace.put(e.getPlayer(), 0);
             //noYGrace.put(e.getPlayer(), 0);
         }
+    }
 
-        /* No Y-Movement Check */
+    private static boolean checkMaxHeight(PlayerPreciseMoveEvent e) {
+        if (e.getTo().getY() - lastGround.get(e.getPlayer()).getY() > 2.5) { //TODO: Consider JumpBoost Effect/SlimeBlocks
+            e.getPlayer().teleport(lastGround.get(e.getPlayer()));
+            Punishment.pullDown(e.getPlayer());
+            Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastGround.get(e.getPlayer()).getY()));
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean checkNoYMovement(PlayerPreciseMoveEvent e) {
         if(e.getPlayer().getLocation().getBlock().getType() != Material.SNOW) {
             double yDif = Math.abs(e.getFrom().getY() - e.getTo().getY());
             yDif = Math.round(yDif * 1000) / 1000.0;
@@ -106,42 +157,11 @@ public class CHECK_Flight implements Listener {
                 if (noYGrace.get(e.getPlayer()) >= GRACE_NYM_COUNT) {
                     Punishment.pullDown(e.getPlayer());
                     Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: ny, yd: %.2f, g: %d", yDif, noYGrace.get(e.getPlayer())));
-                    return;
+                    return true;
                 }
             }
         }
-
-        List<Double> ys = vertMovements.get(e.getPlayer());
-        if (ys.size() >= 5) {
-            double sum = 0;
-            for (Double d : ys) {
-                sum += d;
-            }
-            sum /= ys.size();
-
-            if (lastYMove.containsKey(e.getPlayer())) {
-                double lym = lastYMove.get(e.getPlayer());
-                if (e.getFrom().getY() > e.getTo().getY()) { //Falling
-                    if (lym >= sum) { //Not accelerating!
-                        sumGrace.put(e.getPlayer(), sumGrace.getOrDefault(e.getPlayer(), 0) + 1);
-                        if (sumGrace.get(e.getPlayer()) >= GRACE_YSUM_COUNT) {
-                            Punishment.pullDown(e.getPlayer());
-                            Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: fna, s0: %.2f, s1: %.2f", lym, sum));
-                        }
-                    }
-                } else if (e.getFrom().getY() < e.getTo().getY()) { //Rising
-                    if (lym <= sum) {
-                        sumGrace.put(e.getPlayer(), sumGrace.getOrDefault(e.getPlayer(), 0) + 1);
-                        if (sumGrace.get(e.getPlayer()) >= GRACE_YSUM_COUNT) {
-                            Punishment.pullDown(e.getPlayer());
-                            Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: nsd, s0: %.2f, s1: %.2f", lym, sum));
-                        }
-                    }
-                }
-            }
-            lastYMove.put(e.getPlayer(), sum);
-        }
-
+        return false;
     }
 
     @EventHandler

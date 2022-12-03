@@ -430,8 +430,10 @@ public final class UtilCheat {
         if (UtilBlock.isClimbableBlock(locIn.getBlock())) return true;
         if (UtilBlock.isCarpet(locIn.getBlock())) return true;
         if (UtilBlock.isLiquid(locIn.getBlock())) return true;
+        if (UtilBlock.isPowderSnow(locIn.getBlock())) return true;
         if (UtilCheat.isOnLilyPad(locIn)) return true;
         if (UtilCheat.isOnFence(locIn)) return true;
+
 
         List<Block> blocks = new ArrayList<>();
         Location loc = locIn.clone().subtract(0, down, 0);
@@ -446,7 +448,7 @@ public final class UtilCheat {
         blocks.add(loc.clone().add(-0.3, 0, -0.3).getBlock());
 
         for (Block b : blocks) {
-            if (UtilBlock.isSolid(b)) {
+            if (UtilBlock.isSolid(b) || UtilBlock.isCarpet(b)) {
                 return true;
             }
         }
