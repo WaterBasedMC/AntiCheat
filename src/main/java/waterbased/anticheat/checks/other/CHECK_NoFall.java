@@ -45,6 +45,9 @@ public class CHECK_NoFall implements Listener {
     public void onDamage(EntityDamageEvent e) {
         if (e.getEntity() instanceof Player p) {
             if (e.getCause() == EntityDamageEvent.DamageCause.FALL) {
+                if(!highest.containsKey(p)) {
+                    return;
+                }
                 double yDiff = highest.get(p).getY() - p.getLocation().getY();
                 double sd = yDiff - 3;
 
