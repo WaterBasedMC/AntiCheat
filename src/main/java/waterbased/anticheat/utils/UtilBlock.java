@@ -296,6 +296,10 @@ public class UtilBlock {
         return block != null && (block.getType() == Material.WATER || block.getType() == Material.LAVA);
     }
 
+    public static boolean isPowderSnow(Block block) {
+        return block.getType() == Material.POWDER_SNOW;
+    }
+
     public static boolean isSolid(Block b) {
         return b.getType().isSolid() && b.getType().isBlock() && b.getType().isCollidable();
     }
