@@ -1,15 +1,26 @@
 package waterbased.anticheat.checks.movement;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.util.Vector;
 import waterbased.anticheat.AntiCheat;
 import waterbased.anticheat.events.PlayerPreciseMoveEvent;
+import waterbased.anticheat.utils.Notifier;
+import waterbased.anticheat.utils.Punishment;
+
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class CHECK_Speed implements Listener {
 
@@ -24,8 +35,26 @@ public class CHECK_Speed implements Listener {
         UNKNOWN;
     }
 
+    private static final double MAX_PACKET_XZ = 0.381D;
+
+    private static HashMap<Player, Long> tickGrace = new HashMap<Player, Long>();
+
     @EventHandler
     public void onMove(PlayerPreciseMoveEvent e) {
+
+        if(Punishment.isBeeingPunished(e.getPlayer())) {
+            return;
+        }
+
+        if(e.getPlayer().getAllowFlight()) {
+            return;
+        }
+
+        if(tickGrace.getOrDefault(e.getPlayer(), 0L) > AntiCheat.tick) {
+            return;
+        } else {
+            tickGrace.remove(e.getPlayer());
+        }
 
         if(!checkPacketDistance(e.getPlayer(), e.getFrom(), e.getTo())) {
             return;
@@ -33,13 +62,31 @@ public class CHECK_Speed implements Listener {
 
     }
 
-    static double packetDistanceMax = 0;
+    @EventHandler
+    public void onDamage(EntityDamageByEntityEvent e) {
+        if(e.getEntity() instanceof Player p) {
+            if(e.getDamager() instanceof Player dp) {
+                int multi = dp.getInventory().getItemInMainHand().getEnchantments().getOrDefault(Enchantment.KNOCKBACK, 0);
+                tickGrace.put(p, AntiCheat.tick + 5L + (multi * 2L));
+            } else if(e.getDamager() instanceof Projectile projectile) {
+                tickGrace.put(p, AntiCheat.tick + 2L);
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onTeleport(PlayerTeleportEvent e) {
+        tickGrace.put(e.getPlayer(), AntiCheat.tick + 2);
+    }
 
     private boolean checkPacketDistance(Player player, Location from, Location to) {
-
         double xzDiff2 = Math.pow(to.getX() - from.getX(), 2) + Math.pow(to.getZ() - from.getZ(), 2);
-
-        player.sendActionBar(Component.text(calcMovementDirection(player, from, to).toString()));
+        if(xzDiff2 > MAX_PACKET_XZ) {
+            Notifier.notify(Notifier.Check.MOVEMENT_Speed, player, String.format("t: mpd, d: %.2f", xzDiff2));
+            player.teleport(from);
+            Punishment.freeze(player);
+            return false;
+        }
 
         return true;
     }
