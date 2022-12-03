@@ -299,9 +299,22 @@ public class UtilBlock {
         return false;
     }
 
+    private static HashSet<Material> matClimbable = new HashSet<>();
+
+    static {
+        matClimbable.add(Material.VINE);
+        matClimbable.add(Material.LADDER);
+        matClimbable.add(Material.SCAFFOLDING);
+        matClimbable.add(Material.WEEPING_VINES);
+        matClimbable.add(Material.WEEPING_VINES_PLANT);
+        matClimbable.add(Material.TWISTING_VINES);
+        matClimbable.add(Material.TWISTING_VINES_PLANT);
+        matClimbable.add(Material.GLOW_BERRIES);
+        // & All trapdoors (see isClimbableBlock)
+    }
+
     public static boolean isClimbableBlock(Block block) {
-        return (block.getType() == Material.VINE) || (block.getType() == Material.LADDER)
-                || (block.getType() == Material.WATER) || (block.getType() == Material.LAVA);
+        return matClimbable.contains(block.getType()) || (block.getType().toString().endsWith("_TRAPDOOR") && matClimbable.contains(block.getRelative(BlockFace.DOWN).getType()));
     }
 
 }

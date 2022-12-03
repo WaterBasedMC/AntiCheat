@@ -5,6 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.type.Gate;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -187,8 +188,10 @@ public final class UtilCheat {
     public static boolean isOnGround(Location locIn, double down) {
 
         if (UtilBlock.isClimbableBlock(locIn.getBlock())) return true;
+        if (UtilBlock.isCarpet(locIn.getBlock())) return true;
         if (UtilBlock.isLiquid(locIn.getBlock())) return true;
         if (UtilCheat.isOnLilyPad(locIn)) return true;
+        if (UtilCheat.isOnFence(locIn)) return true;
 
         List<Block> blocks = new ArrayList<>();
         Location loc = locIn.clone().subtract(0, down, 0);
@@ -354,6 +357,21 @@ public final class UtilCheat {
                 || (block.getRelative(BlockFace.EAST).getType() == lily)
                 || (block.getRelative(BlockFace.WEST).getType() == lily);
     }
+
+    public static boolean isOnFence(Location loc) {
+        if(loc.subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_FENCE")) {
+            return true;
+        }
+        if(loc.subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_FENCE_GATE")) {
+            Gate g = (Gate) loc.subtract(0, 0.51, 0).getBlock().getBlockData();
+            return !g.isOpen();
+        }
+        if(loc.subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_WALL")) {
+            return true;
+        }
+        return false;
+    }
+
 
     public static boolean isSubmersed(Player player) {
         return (player.getLocation().getBlock().isLiquid())
