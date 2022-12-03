@@ -15,6 +15,8 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.util.Vector;
+import org.spigotmc.event.entity.EntityDismountEvent;
+import org.spigotmc.event.entity.EntityMountEvent;
 import waterbased.anticheat.AntiCheat;
 import waterbased.anticheat.events.PlayerPreciseMoveEvent;
 import waterbased.anticheat.utils.Notifier;
@@ -83,6 +85,20 @@ public class CHECK_Speed implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onRespawn(PlayerRespawnEvent e) {
         tickGrace.put(e.getPlayer(), AntiCheat.tick + 2);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onMount(EntityMountEvent e) {
+        if(e.getEntity() instanceof Player p) {
+            tickGrace.put(p, AntiCheat.tick + 5);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onMount(EntityDismountEvent e) {
+        if(e.getEntity() instanceof Player p) {
+            tickGrace.put(p, AntiCheat.tick + 5);
+        }
     }
 
     private boolean checkPacketDistance(Player player, Location from, Location to) {
