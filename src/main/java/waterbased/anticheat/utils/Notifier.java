@@ -15,6 +15,7 @@ public class Notifier {
         OTHER_NoFall("NoFall", "Taking no fall damage"),
         MOVEMENT_Flight("Flight", "Flying in survival/adventure mode."),
         MOVEMENT_ElytraFlight("ElytraFlight", "Gliding like wearing a elytra without wearing it."),
+        MOVEMENT_FastLadder("FastLadder", "Climbing ladders faster then allowed."),
 
         MOVEMENT_Speed("Speed", "Move faster than allowed"),
 

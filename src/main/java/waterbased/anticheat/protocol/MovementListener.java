@@ -38,6 +38,7 @@ public class MovementListener {
                 PacketContainer packet = e.getPacket();
 
                 Location loc = null;
+                Location lastLoc = lastLocation.getOrDefault(e.getPlayer(), null);
                 boolean onGround = false;
 
                 if (packet.getType() == PacketType.Play.Client.POSITION) {
@@ -46,6 +47,10 @@ public class MovementListener {
                     double z = packet.getDoubles().read(2);
                     onGround = packet.getBooleans().read(0);
                     loc = new Location(e.getPlayer().getWorld(), x, y, z);
+                    if(lastLoc != null) {
+                        loc.setYaw(lastLoc.getYaw());
+                        loc.setPitch(lastLoc.getPitch());
+                    }
                 }
 
                 if (packet.getType() == PacketType.Play.Client.POSITION_LOOK) {
@@ -62,7 +67,7 @@ public class MovementListener {
                     float yaw = packet.getFloat().read(0);
                     float pitch = packet.getFloat().read(1);
                     onGround = packet.getBooleans().read(0);
-                    loc = e.getPlayer().getLocation();
+                    loc = e.getPlayer().getLocation().clone();
                     loc.setYaw(yaw);
                     loc.setPitch(pitch);
                 }
