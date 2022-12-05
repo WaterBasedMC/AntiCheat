@@ -131,7 +131,9 @@ public class CHECK_Flight implements Listener {
         }
 
         if (changedDirection) {
-            vertMovements.get(e.getPlayer()).clear();
+            if(vertMovements.containsKey(e.getPlayer())) {
+                vertMovements.get(e.getPlayer()).clear();
+            }
             lastYMove.remove(e.getPlayer());
             sumGrace.put(e.getPlayer(), 0);
             //noYGrace.put(e.getPlayer(), 0);
