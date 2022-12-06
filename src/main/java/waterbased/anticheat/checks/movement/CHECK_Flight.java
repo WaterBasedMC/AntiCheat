@@ -97,8 +97,8 @@ public class CHECK_Flight implements Listener {
                     if (lym >= sum) { //Not accelerating!
                         sumGrace.put(e.getPlayer(), sumGrace.getOrDefault(e.getPlayer(), 0) + 1);
                         if (sumGrace.get(e.getPlayer()) >= GRACE_YSUM_COUNT) {
-                            setBack(e.getPlayer());
                             Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: fna, s0: %.2f, s1: %.2f", lym, sum));
+                            setBack(e.getPlayer());
                             return true;
                         }
                     }
@@ -106,8 +106,8 @@ public class CHECK_Flight implements Listener {
                     if (lym <= sum) {
                         sumGrace.put(e.getPlayer(), sumGrace.getOrDefault(e.getPlayer(), 0) + 1);
                         if (sumGrace.get(e.getPlayer()) >= GRACE_YSUM_COUNT) {
-                            setBack(e.getPlayer());
                             Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: nsd, s0: %.2f, s1: %.2f", lym, sum));
+                            setBack(e.getPlayer());
                             return true;
                         }
                     }
@@ -147,8 +147,8 @@ public class CHECK_Flight implements Listener {
     private static boolean checkMaxHeight(PlayerPreciseMoveEvent e) {
         Location lastGround = PlayerMovement.getLastOnGround(e.getPlayer());
         if (e.getTo().getY() - lastGround.getY() >= 1.5) { //TODO: Consider JumpBoost Effect/SlimeBlocks
-            setBack(e.getPlayer());
             Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastGround.getY()));
+            setBack(e.getPlayer());
             return true;
         }
         return false;
@@ -161,8 +161,8 @@ public class CHECK_Flight implements Listener {
             if (yDif <= 0.1) { //Moving horizontally without falling
                 noYGrace.put(e.getPlayer(), noYGrace.getOrDefault(e.getPlayer(), 0) + 1);
                 if (noYGrace.get(e.getPlayer()) >= GRACE_NYM_COUNT) {
-                    setBack(e.getPlayer());
                     Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: ny, yd: %.2f, g: %d", yDif, noYGrace.get(e.getPlayer())));
+                    setBack(e.getPlayer());
                     return true;
                 }
             }
