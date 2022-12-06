@@ -50,7 +50,7 @@ public class CHECK_Flight implements Listener {
             return;
         }
 
-        if (UtilCheat.isOnGround(e.getTo())
+        if (PlayerMovement.isOnGround(e.getPlayer())
                 || e.getPlayer().getAllowFlight()
                 || !lastGround.containsKey(e.getPlayer())
                 || e.getPlayer().getVehicle() != null) {
@@ -169,7 +169,7 @@ public class CHECK_Flight implements Listener {
     @EventHandler
     public void onGroundChange(PlayerOnGroundChangeEvent e) {
         if (Punishment.isBeeingPunished(e.getPlayer())) return;
-        if (e.isOnGround() && !UtilCheat.isOnGround(e.getPlayer().getLocation())) {
+        if (e.isOnGround() && !PlayerMovement.isOnGround(e.getPlayer())) {
             int grace = onGroundGrace.getOrDefault(e.getPlayer(), 0);
             grace++;
             if (grace >= GRACE_GROUND_MID_AIR_COUNT) {

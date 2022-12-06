@@ -11,6 +11,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import waterbased.anticheat.AntiCheat;
+import waterbased.anticheat.checks.movement.PlayerMovement;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,7 +41,7 @@ public class Punishment implements Listener {
         BukkitTask task = Bukkit.getScheduler().runTaskTimer(AntiCheat.instance, new Runnable() {
             @Override
             public void run() {
-                if(UtilCheat.isOnGround(p) || p.isDead()) {
+                if(PlayerMovement.isOnGround(p) || p.isDead()) {
                     pullDownTask.get(p).cancel();
                     punishing.remove(p);
                     return;

@@ -2,11 +2,8 @@ package waterbased.anticheat;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import waterbased.anticheat.checks.movement.CHECK_Elytra;
-import waterbased.anticheat.checks.movement.CHECK_FastLadder;
-import waterbased.anticheat.checks.movement.CHECK_Flight;
-import waterbased.anticheat.checks.movement.CHECK_Speed;
-import waterbased.anticheat.checks.other.CHECK_NoFall;
+import waterbased.anticheat.checks.movement.*;
+import waterbased.anticheat.checks.player.CHECK_NoFall;
 import waterbased.anticheat.checks.world.CHECK_BlockBreak;
 import waterbased.anticheat.protocol.MovementListener;
 import waterbased.anticheat.utils.Punishment;
@@ -33,6 +30,9 @@ public final class AntiCheat extends JavaPlugin {
 
     private void enableChecks() {
         Bukkit.getPluginManager().registerEvents(new Punishment(), this);
+
+        //Player Movement
+        Bukkit.getPluginManager().registerEvents(new PlayerMovement(), this);
 
         //Movement
         Bukkit.getPluginManager().registerEvents(new CHECK_Flight(), this);

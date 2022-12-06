@@ -270,7 +270,9 @@ public class UtilBlock {
     }
 
     public static boolean isClimbableBlock(Block block) {
-        return matClimbable.contains(block.getType()) || (block.getType().toString().endsWith("_TRAPDOOR") && matClimbable.contains(block.getRelative(BlockFace.DOWN).getType()));
+        return matClimbable.contains(block.getType())
+                || (block.getType().toString().endsWith("_TRAPDOOR")
+                    && matClimbable.contains(block.getRelative(BlockFace.DOWN).getType()));
     }
 
     public static boolean isInAir(Player player) {

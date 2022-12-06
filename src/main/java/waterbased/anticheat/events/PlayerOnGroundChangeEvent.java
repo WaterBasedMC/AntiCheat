@@ -11,10 +11,12 @@ public class PlayerOnGroundChangeEvent extends Event {
 
     private final boolean onGround;
     private final Player player;
+    private final double fallDistance;
 
-    public PlayerOnGroundChangeEvent(Player player, boolean onGround) {
+    public PlayerOnGroundChangeEvent(Player player, boolean onGround, double fallDistance) {
         this.player = player;
         this.onGround = onGround;
+        this.fallDistance = fallDistance;
     }
 
     public boolean isOnGround() {
@@ -23,6 +25,10 @@ public class PlayerOnGroundChangeEvent extends Event {
 
     public Player getPlayer() {
         return this.player;
+    }
+
+    public double getFallDistance() {
+        return this.fallDistance;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package waterbased.anticheat.utils;
 
+import net.bytebuddy.asm.Advice;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -10,8 +11,10 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.BoundingBox;
 import org.bukkit.util.NumberConversions;
 import org.bukkit.util.Vector;
+import waterbased.anticheat.checks.movement.PlayerMovement;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -381,7 +384,6 @@ public final class UtilCheat {
         return (player.getLocation().getBlock().isLiquid()) || (player.getLocation().getBlock().getRelative(BlockFace.DOWN).isLiquid()) || (player.getLocation().getBlock().getRelative(BlockFace.UP).isLiquid());
     }
 
-    @SuppressWarnings("unlikely-arg-type")
     public static boolean isInWeb(Player player) {
         if (UtilBlock.getBlocksAroundCenter(player.getLocation(), 1).contains(Material.COBWEB)) {
             return true;
@@ -406,131 +408,6 @@ public final class UtilCheat {
         return m.isInteractable();
     }
 
-    public static boolean isOnFence(Location loc) {
-        if (loc.clone().subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_FENCE")) {
-            return true;
-        }
-        if (loc.clone().subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_FENCE_GATE")) {
-            Gate g = (Gate) loc.clone().subtract(0, 0.51, 0).getBlock().getBlockData();
-            return !g.isOpen();
-        }
-        return loc.clone().subtract(0, 0.51, 0).getBlock().getType().toString().endsWith("_WALL");
-    }
-
-    public static boolean isOnGround(Location loc) {
-        return isOnGround(loc, 0.05);
-    }
-
-    public static boolean isOnGround(Player p) {
-        return isOnGround(p.getLocation());
-    }
-
-    public static boolean isOnGround(Location locIn, double down) {
-
-        if (UtilBlock.isClimbableBlock(locIn.getBlock())) return true;
-        if (UtilBlock.isCarpet(locIn.getBlock())) return true;
-        if (UtilBlock.isLiquid(locIn.getBlock())) return true;
-        if (UtilBlock.isPowderSnow(locIn.getBlock())) return true;
-        if (UtilCheat.isOnLilyPad(locIn)) return true;
-        if (UtilCheat.isOnFence(locIn)) return true;
-
-
-        List<Block> blocks = new ArrayList<>();
-        Location loc = locIn.clone().subtract(0, down, 0);
-        blocks.add(loc.getBlock());
-        blocks.add(loc.clone().add(0.3, 0, 0).getBlock());
-        blocks.add(loc.clone().add(0, 0, 0.3).getBlock());
-        blocks.add(loc.clone().add(-0.3, 0, 0).getBlock());
-        blocks.add(loc.clone().add(0, 0, -0.3).getBlock());
-        blocks.add(loc.clone().add(0.3, 0, 0.3).getBlock());
-        blocks.add(loc.clone().add(0.3, 0, -0.3).getBlock());
-        blocks.add(loc.clone().add(-0.3, 0, 0.3).getBlock());
-        blocks.add(loc.clone().add(-0.3, 0, -0.3).getBlock());
-
-        for (Block b : blocks) {
-            if (UtilBlock.isSolid(b) || UtilBlock.isCarpet(b)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static boolean isOnGroundOld(final Location location, final int down) {
-        final double posX = location.getX();
-        final double posZ = location.getZ();
-        final double fracX = (UtilMath.getFraction(posX) > 0.0) ? Math.abs(UtilMath.getFraction(posX)) : (1.0 - Math.abs(UtilMath.getFraction(posX)));
-        final double fracZ = (UtilMath.getFraction(posZ) > 0.0) ? Math.abs(UtilMath.getFraction(posZ)) : (1.0 - Math.abs(UtilMath.getFraction(posZ)));
-        final int blockX = location.getBlockX();
-        final int blockY = location.getBlockY() - down;
-        final int blockZ = location.getBlockZ();
-        final World world = location.getWorld();
-        if (UtilBlock.isSolid(world.getBlockAt(blockX, blockY, blockZ)) || isOnLilyPad(location)) {
-            return true;
-        }
-        if (fracX < 0.3) {
-            if (UtilBlock.isSolid(world.getBlockAt(blockX - 1, blockY, blockZ))) {
-                return true;
-            }
-            if (fracZ < 0.3) {
-                if (UtilBlock.isSolid(world.getBlockAt(blockX - 1, blockY, blockZ - 1))) {
-                    return true;
-                }
-                if (UtilBlock.isSolid(world.getBlockAt(blockX, blockY, blockZ - 1))) {
-                    return true;
-                }
-                return UtilBlock.isSolid(world.getBlockAt(blockX + 1, blockY, blockZ - 1));
-            } else if (fracZ > 0.7) {
-                if (UtilBlock.isSolid(world.getBlockAt(blockX - 1, blockY, blockZ + 1))) {
-                    return true;
-                }
-                if (UtilBlock.isSolid(world.getBlockAt(blockX, blockY, blockZ + 1))) {
-                    return true;
-                }
-                return UtilBlock.isSolid(world.getBlockAt(blockX + 1, blockY, blockZ + 1));
-            }
-        } else if (fracX > 0.7) {
-            if (UtilBlock.isSolid(world.getBlockAt(blockX + 1, blockY, blockZ))) {
-                return true;
-            }
-            if (fracZ < 0.3) {
-                if (UtilBlock.isSolid(world.getBlockAt(blockX - 1, blockY, blockZ - 1))) {
-                    return true;
-                }
-                if (UtilBlock.isSolid(world.getBlockAt(blockX, blockY, blockZ - 1))) {
-                    return true;
-                }
-                return UtilBlock.isSolid(world.getBlockAt(blockX + 1, blockY, blockZ - 1));
-            } else if (fracZ > 0.7) {
-                if (UtilBlock.isSolid(world.getBlockAt(blockX - 1, blockY, blockZ + 1))) {
-                    return true;
-                }
-                if (UtilBlock.isSolid(world.getBlockAt(blockX, blockY, blockZ + 1))) {
-                    return true;
-                }
-                return UtilBlock.isSolid(world.getBlockAt(blockX + 1, blockY, blockZ + 1));
-            }
-        } else if (fracZ < 0.3) {
-            return UtilBlock.isSolid(world.getBlockAt(blockX, blockY, blockZ - 1));
-        } else return fracZ > 0.7 && UtilBlock.isSolid(world.getBlockAt(blockX, blockY, blockZ + 1));
-        return false;
-    }
-
-    public static boolean isOnLilyPad(Player player) {
-        return isOnLilyPad(player.getLocation());
-    }
-
-    public static boolean isOnLilyPad(Location loc) {
-        Block block = loc.getBlock();
-        Material lily = Material.LILY_PAD;
-
-        return (block.getType() == lily) || (block.getRelative(BlockFace.NORTH).getType() == lily) || (block.getRelative(BlockFace.SOUTH).getType() == lily) || (block.getRelative(BlockFace.EAST).getType() == lily) || (block.getRelative(BlockFace.WEST).getType() == lily);
-    }
-
-    public static boolean isOnVine(Player player) {
-        return player.getLocation().getBlock().getType() == Material.VINE;
-    }
-
     public static boolean isSlab(Block block) {
         if (block == null) {
             return false;
@@ -538,7 +415,6 @@ public final class UtilCheat {
         return block.getType().toString().toLowerCase().contains("_slab");
     }
 
-    @SuppressWarnings("incomplete-switch")
     public static boolean isStair(Block block) {
         return block.getType().toString().toLowerCase().contains("_stairs");
     }
