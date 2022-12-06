@@ -1,5 +1,6 @@
 package waterbased.anticheat.utils;
 
+import com.comphenix.protocol.PacketType;
 import jdk.jshell.execution.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -9,6 +10,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 import waterbased.anticheat.AntiCheat;
 import waterbased.anticheat.checks.movement.PlayerMovement;
@@ -24,6 +26,7 @@ public class Punishment implements Listener {
     private static final HashSet<Player> punishing = new HashSet<>();
 
     private static final HashMap<Player, BukkitTask> pullDownTask = new HashMap<>();
+    private static final HashMap<Player, Location> pullDownLastLocation = new HashMap<>();
 
     public static boolean isBeeingPunished(Player p) {
         return punishing.contains(p);
@@ -36,29 +39,49 @@ public class Punishment implements Listener {
 
         Vector v = new Vector(0, 0, 0);
         long startTick = AntiCheat.tick;
+        Location start = p.getLocation().clone();
+        Location highest = PlayerMovement.highestSinceGround.getOrDefault(p, start);
 
-        Location to = p.getLocation().clone();
         BukkitTask task = Bukkit.getScheduler().runTaskTimer(AntiCheat.instance, new Runnable() {
             @Override
             public void run() {
-                if(PlayerMovement.isOnGround(p) || p.isDead()) {
-                    pullDownTask.get(p).cancel();
+                if(p.isDead() || PlayerMovement.isOnGround(p)) {
                     punishing.remove(p);
+                    pullDownTask.remove(p).cancel();
+                    pullDownLastLocation.remove(p);
                     return;
                 }
-                double y = GRAVITY_CONST * ((AntiCheat.tick - startTick));
-                if (y > 3.92) y = 3.92;
 
-                for(double d = 0; d <= y; d += 0.1) {
-                    if(UtilBlock.isInSolidBlock(to.clone().subtract(0, d, 0))) {
-                        y = d-0.2;
-                        pullDownTask.get(p).cancel();
-                        punishing.remove(p);
+                long time = AntiCheat.tick - startTick;
+                double ySpeed = GRAVITY_CONST * time;
+                if(ySpeed > 3.92) ySpeed = 3.92;
+
+                Location from = pullDownLastLocation.getOrDefault(p, start);
+
+                boolean done = false;
+                double y = from.getY();
+
+                while(y > from.getY() - ySpeed) {
+                    if(!PlayerMovement.isOnGround(from.clone().subtract(0, from.getY() - y, 0), p.getBoundingBox(), 0.05)) {
+                        y -= 0.05;
+                    } else {
+                        done = true;
                         break;
                     }
                 }
-                to.subtract(0, y, 0);
-                p.teleport(to, PlayerTeleportEvent.TeleportCause.PLUGIN);
+                Location to = from.clone();
+                to.setY(y);
+                p.teleport(to);
+                pullDownLastLocation.put(p, to);
+                if(done) {
+                    double fallDamage = highest.getY() - to.getY() - 3;
+                    if(fallDamage >= 1) {
+                        p.damage(fallDamage);
+                    }
+                    punishing.remove(p);
+                    pullDownTask.remove(p).cancel();
+                    pullDownLastLocation.remove(p);
+                }
             }
         }, 0, 1);
         pullDownTask.put(p, task);

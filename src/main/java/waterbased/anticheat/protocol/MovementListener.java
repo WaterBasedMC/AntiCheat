@@ -31,6 +31,9 @@ public class MovementListener {
 
             @Override
             public void onPacketReceiving(PacketEvent e) {
+
+                if(!AntiCheat.instance.isEnabled()) return;
+
                 PacketContainer packet = e.getPacket();
 
                 if (packet.getType() == PacketType.Play.Client.POSITION) {

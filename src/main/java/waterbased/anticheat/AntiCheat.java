@@ -2,6 +2,7 @@ package waterbased.anticheat;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import waterbased.anticheat.checks.movement.*;
 import waterbased.anticheat.checks.player.CHECK_NoFall;
 import waterbased.anticheat.checks.world.CHECK_BlockBreak;
@@ -26,6 +27,7 @@ public final class AntiCheat extends JavaPlugin {
     @Override
     public void onDisable() {
         MovementListener.unregister();
+        Bukkit.getScheduler().getPendingTasks().forEach(BukkitTask::cancel);
     }
 
     private void enableChecks() {

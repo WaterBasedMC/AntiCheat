@@ -110,7 +110,7 @@ public class PlayerMovement implements Listener {
         return isOnGround.getOrDefault(player, isOnGround(player.getLocation(), player.getBoundingBox(), 0.05));
     }
 
-    private static boolean isOnGround(Location inLoc, BoundingBox boundingBox, double down) {
+    public static boolean isOnGround(Location inLoc, BoundingBox boundingBox, double down) {
 
         List<Block> blocks = new ArrayList<>();
         Location loc = inLoc.clone().subtract(0, down, 0);
