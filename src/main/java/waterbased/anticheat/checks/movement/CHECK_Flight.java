@@ -97,7 +97,7 @@ public class CHECK_Flight implements Listener {
                     if (lym >= sum) { //Not accelerating!
                         sumGrace.put(e.getPlayer(), sumGrace.getOrDefault(e.getPlayer(), 0) + 1);
                         if (sumGrace.get(e.getPlayer()) >= GRACE_YSUM_COUNT) {
-                            Punishment.pullDown(e.getPlayer());
+                            setBack(e.getPlayer());
                             Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: fna, s0: %.2f, s1: %.2f", lym, sum));
                             return true;
                         }
@@ -106,7 +106,7 @@ public class CHECK_Flight implements Listener {
                     if (lym <= sum) {
                         sumGrace.put(e.getPlayer(), sumGrace.getOrDefault(e.getPlayer(), 0) + 1);
                         if (sumGrace.get(e.getPlayer()) >= GRACE_YSUM_COUNT) {
-                            Punishment.pullDown(e.getPlayer());
+                            setBack(e.getPlayer());
                             Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: nsd, s0: %.2f, s1: %.2f", lym, sum));
                             return true;
                         }
@@ -146,8 +146,8 @@ public class CHECK_Flight implements Listener {
 
     private static boolean checkMaxHeight(PlayerPreciseMoveEvent e) {
         Location lastGround = PlayerMovement.getLastOnGround(e.getPlayer());
-        if (e.getTo().getY() - lastGround.getY() > 2.5) { //TODO: Consider JumpBoost Effect/SlimeBlocks
-            Punishment.pullDown(e.getPlayer());
+        if (e.getTo().getY() - lastGround.getY() >= 1.5) { //TODO: Consider JumpBoost Effect/SlimeBlocks
+            setBack(e.getPlayer());
             Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastGround.getY()));
             return true;
         }
@@ -161,7 +161,7 @@ public class CHECK_Flight implements Listener {
             if (yDif <= 0.1) { //Moving horizontally without falling
                 noYGrace.put(e.getPlayer(), noYGrace.getOrDefault(e.getPlayer(), 0) + 1);
                 if (noYGrace.get(e.getPlayer()) >= GRACE_NYM_COUNT) {
-                    Punishment.pullDown(e.getPlayer());
+                    setBack(e.getPlayer());
                     Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: ny, yd: %.2f, g: %d", yDif, noYGrace.get(e.getPlayer())));
                     return true;
                 }
@@ -177,12 +177,21 @@ public class CHECK_Flight implements Listener {
             int grace = onGroundGrace.getOrDefault(e.getPlayer(), 0);
             grace++;
             if (grace >= GRACE_GROUND_MID_AIR_COUNT) {
-                Punishment.pullDown(e.getPlayer());
+                setBack(e.getPlayer());
                 Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), "t: OnGroundInAir");
                 onGroundGrace.remove(e.getPlayer());
             } else {
                 onGroundGrace.put(e.getPlayer(), grace);
             }
+        }
+    }
+
+    private static void setBack(Player player) {
+        Location lastGround = PlayerMovement.getLastOnGround(player);
+        if(player.getLocation().distanceSquared(lastGround) < 50) {
+            Punishment.setBack(player, lastGround);
+        } else {
+            Punishment.pullDown(player);
         }
     }
 
