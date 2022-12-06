@@ -30,9 +30,8 @@ public class CHECK_FastLadder implements Listener {
                     if(yDiff > 0.4 + TOLERANCE_LADDER_Y) {
                         climbGrace.put(e.getPlayer(), climbGrace.getOrDefault(e.getPlayer(), 0) + 1);
                         if(climbGrace.get(e.getPlayer()) > 3) {
-                            e.getPlayer().teleport(e.getFrom());
                             Notifier.notify(Notifier.Check.MOVEMENT_FastLadder, e.getPlayer(), String.format("t: yd, yd: %.2f", yDiff));
-                            Punishment.freeze(e.getPlayer());
+                            Punishment.setBack(e.getPlayer(), e.getFrom(), true);
                             climbGrace.put(e.getPlayer(), 0);
                         }
                     }

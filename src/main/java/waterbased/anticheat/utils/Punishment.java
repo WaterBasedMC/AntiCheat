@@ -40,7 +40,7 @@ public class Punishment implements Listener {
         Vector v = new Vector(0, 0, 0);
         long startTick = AntiCheat.tick;
         Location start = p.getLocation().clone();
-        Location highest = PlayerMovement.highestSinceGround.getOrDefault(p, start);
+        Location highest = PlayerMovement.getHighestSinceGround(p);
 
         BukkitTask task = Bukkit.getScheduler().runTaskTimer(AntiCheat.instance, new Runnable() {
             @Override
@@ -69,15 +69,18 @@ public class Punishment implements Listener {
                         break;
                     }
                 }
+
+                //Get decimals of y
+                double yDecimals = y - (int) y;
+
+
+
                 Location to = from.clone();
                 to.setY(y);
                 p.teleport(to);
                 pullDownLastLocation.put(p, to);
                 if(done) {
-                    double fallDamage = highest.getY() - to.getY() - 3;
-                    if(fallDamage >= 1) {
-                        p.damage(fallDamage);
-                    }
+                    UtilDamage.dealFallDamage(p, highest.getY() - to.getY(), true);
                     punishing.remove(p);
                     pullDownTask.remove(p).cancel();
                     pullDownLastLocation.remove(p);
@@ -85,6 +88,17 @@ public class Punishment implements Listener {
             }
         }, 0, 1);
         pullDownTask.put(p, task);
+    }
+
+    public static void setBack(Player player, Location loc, boolean freeze) {
+        player.teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+        if(freeze) {
+            freeze(player);
+        }
+    }
+
+    public static void setBack(Player player, Location loc) {
+        setBack(player, loc, true);
     }
 
     public static void freeze(Player player) {

@@ -12,7 +12,6 @@ import waterbased.anticheat.events.PlayerOnGroundChangeEvent;
 import waterbased.anticheat.events.PlayerPreciseMoveEvent;
 import waterbased.anticheat.utils.Notifier;
 import waterbased.anticheat.utils.Punishment;
-import waterbased.anticheat.utils.UtilCheat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,7 +35,7 @@ public class CHECK_Flight implements Listener {
         UP, DOWN, NONE
 
         }
-    private static final HashMap<Player, Location> lastGround = new HashMap<>();
+
     private static final HashMap<Player, Integer> onGroundGrace = new HashMap<>();
     private static final HashMap<Player, Integer> sumGrace = new HashMap<>();
     private static final HashMap<Player, Integer> noYGrace = new HashMap<>();
@@ -44,24 +43,29 @@ public class CHECK_Flight implements Listener {
     private static final HashMap<Player, Double> lastYMove = new HashMap<>();
     private static final HashMap<Player, VerticalDirection> vertDirection = new HashMap<>();
 
+    private static void reset(Player player) {
+        onGroundGrace.remove(player);
+        sumGrace.remove(player);
+        noYGrace.remove(player);
+        vertMovements.remove(player);
+        lastYMove.remove(player);
+        vertDirection.remove(player);
+    }
+
     @EventHandler
     public void onMove(PlayerPreciseMoveEvent e) {
         if (Punishment.isBeeingPunished(e.getPlayer())) {
             return;
         }
 
-        if (PlayerMovement.isOnGround(e.getPlayer())
-                || e.getPlayer().getAllowFlight()
-                || !lastGround.containsKey(e.getPlayer())
-                || e.getPlayer().getVehicle() != null) {
-            lastGround.put(e.getPlayer(), e.getTo());
-            onGroundGrace.put(e.getPlayer(), 0);
-            noYGrace.put(e.getPlayer(), 0);
-            sumGrace.put(e.getPlayer(), 0);
-            if (vertMovements.containsKey(e.getPlayer())) vertMovements.get(e.getPlayer()).clear();
-            return;
-        }
-        if (e.getPlayer().isGliding()) {
+        if(e.getPlayer().getAllowFlight()
+                || e.getPlayer().isInsideVehicle()
+                || PlayerMovement.inLiquid(e.getPlayer())
+                || PlayerMovement.isClimbing(e.getPlayer())
+                || PlayerMovement.inWebs(e.getPlayer())
+                || PlayerMovement.isOnGround(e.getPlayer())
+                || e.getPlayer().isGliding()) {
+            reset(e.getPlayer());
             return;
         }
 
@@ -141,10 +145,10 @@ public class CHECK_Flight implements Listener {
     }
 
     private static boolean checkMaxHeight(PlayerPreciseMoveEvent e) {
-        if (e.getTo().getY() - lastGround.get(e.getPlayer()).getY() > 2.5) { //TODO: Consider JumpBoost Effect/SlimeBlocks
-            e.getPlayer().teleport(lastGround.get(e.getPlayer()));
+        Location lastGround = PlayerMovement.getLastOnGround(e.getPlayer());
+        if (e.getTo().getY() - lastGround.getY() > 2.5) { //TODO: Consider JumpBoost Effect/SlimeBlocks
             Punishment.pullDown(e.getPlayer());
-            Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastGround.get(e.getPlayer()).getY()));
+            Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastGround.getY()));
             return true;
         }
         return false;
@@ -183,16 +187,13 @@ public class CHECK_Flight implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onTeleport(PlayerTeleportEvent e) {
-        lastGround.put(e.getPlayer(), e.getTo());
+    public void onRespawn(PlayerRespawnEvent e) {
+        reset(e.getPlayer());
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onRespawn(PlayerRespawnEvent e) {
-        lastGround.put(e.getPlayer(), e.getRespawnLocation());
-        onGroundGrace.put(e.getPlayer(), 0);
-        noYGrace.put(e.getPlayer(), 0);
-        sumGrace.put(e.getPlayer(), 0);
+    @EventHandler
+    public void onTeleport(PlayerTeleportEvent e) {
+        reset(e.getPlayer());
     }
 
 }

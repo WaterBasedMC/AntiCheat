@@ -5,6 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import waterbased.anticheat.AntiCheat;
+import waterbased.anticheat.checks.movement.PlayerMovement;
 import waterbased.anticheat.events.PlayerOnGroundChangeEvent;
 import waterbased.anticheat.events.PlayerPreciseMoveEvent;
 import waterbased.anticheat.utils.Notifier;
@@ -17,7 +18,6 @@ public class CHECK_NoFall implements Listener {
 
     private final HashMap<Player, Integer> noDamageGrace = new HashMap<>();
     private final HashMap<Player, Double> shouldDamage = new HashMap<>();
-
     private final HashMap<Player, Long> lastFallDamage = new HashMap<>();
 
     @EventHandler
@@ -36,6 +36,12 @@ public class CHECK_NoFall implements Listener {
 
     @EventHandler
     public void onPreciseMove(PlayerPreciseMoveEvent e) {
+
+        if(PlayerMovement.inLiquid(e.getPlayer()) || PlayerMovement.inWebs(e.getPlayer()) || PlayerMovement.isClimbing(e.getPlayer())) {
+            noDamageGrace.remove(e.getPlayer());
+            shouldDamage.remove(e.getPlayer());
+            return;
+        }
 
         if (noDamageGrace.containsKey(e.getPlayer())) {
             noDamageGrace.put(e.getPlayer(), noDamageGrace.get(e.getPlayer()) - 1);

@@ -26,16 +26,36 @@ import java.util.List;
 
 public class PlayerMovement implements Listener {
 
-    public static final HashMap<Player, Location> lastOnGround = new HashMap<>();
-    public static final HashMap<Player, Location> highestSinceGround = new HashMap<>();
-    public static final HashMap<Player, Location> lastInLiquid = new HashMap<>();
-    public static final HashMap<Player, Location> lastOnClimbable = new HashMap<>();
-    public static final HashMap<Player, Location> lastInWebs = new HashMap<>();
-    public static final HashMap<Player, Boolean> isOnGround = new HashMap<>();
-    public static final HashMap<Player, Boolean> isOnClimbable = new HashMap<>();
-    public static final HashMap<Player, Boolean> isInLiquid = new HashMap<>();
-    public static final HashMap<Player, Boolean> isInWebs = new HashMap<>();
+    private static final HashMap<Player, Location> lastOnGround = new HashMap<>();
+    private static final HashMap<Player, Location> highestSinceGround = new HashMap<>();
+    private static final HashMap<Player, Location> lastInLiquid = new HashMap<>();
+    private static final HashMap<Player, Location> lastOnClimbable = new HashMap<>();
+    private static final HashMap<Player, Location> lastInWebs = new HashMap<>();
+    private static final HashMap<Player, Boolean> isOnGround = new HashMap<>();
+    private static final HashMap<Player, Boolean> isOnClimbable = new HashMap<>();
+    private static final HashMap<Player, Boolean> isInLiquid = new HashMap<>();
+    private static final HashMap<Player, Boolean> isInWebs = new HashMap<>();
     private static final HashMap<Player, Location> lastLocation = new HashMap<>();
+
+    public static Location getLastOnGround(Player player) {
+        return lastOnGround.getOrDefault(player, player.getLocation());
+    }
+
+    public static Location getHighestSinceGround(Player player) {
+        return highestSinceGround.getOrDefault(player, player.getLocation());
+    }
+
+    public static Location getLastInLiquid(Player player) {
+        return lastInLiquid.getOrDefault(player, player.getLocation());
+    }
+
+    public static Location getLastOnClimbable(Player player) {
+        return lastOnClimbable.getOrDefault(player, player.getLocation());
+    }
+
+    public static Location getLastInWebs(Player player) {
+        return lastInWebs.getOrDefault(player, player.getLocation());
+    }
 
     private static boolean callEvent(Player player, Location from, Location to, boolean onGround) {
         PlayerPreciseMoveEvent event = new PlayerPreciseMoveEvent(player, from, to, onGround);
@@ -79,6 +99,33 @@ public class PlayerMovement implements Listener {
         }
         return false;
     }
+
+    public static boolean inWater(Player player) {
+        return inWater(player.getBoundingBox(), player.getWorld());
+    }
+
+    private static boolean inWater(BoundingBox box, World world) {
+        for (Block block : getBlocksOfBoundingBox(box, world)) {
+            if (block.getType() == Material.WATER) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean inLava(Player player) {
+        return inLava(player.getBoundingBox(), player.getWorld());
+    }
+
+    private static boolean inLava(BoundingBox box, World world) {
+        for (Block block : getBlocksOfBoundingBox(box, world)) {
+            if (block.getType() == Material.LAVA) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     public static boolean inWebs(Player player) {
         return isInWebs.getOrDefault(player, inWebs(player.getBoundingBox(), player.getWorld()));

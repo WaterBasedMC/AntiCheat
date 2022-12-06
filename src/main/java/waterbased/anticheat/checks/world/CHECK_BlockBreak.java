@@ -6,6 +6,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.util.RayTraceResult;
 import waterbased.anticheat.utils.Notifier;
+import waterbased.anticheat.utils.Punishment;
 
 public class CHECK_BlockBreak implements Listener {
 
@@ -18,20 +19,20 @@ public class CHECK_BlockBreak implements Listener {
         RayTraceResult result = e.getPlayer().rayTraceBlocks(5.0f);
         if(result == null) {
             e.setCancelled(true);
-            e.getPlayer().teleport(e.getPlayer().getLocation());
+            Punishment.setBack(e.getPlayer(), e.getPlayer().getLocation(), false);
             Notifier.notify(Notifier.Check.WORLD_BlockBreak, e.getPlayer(), "t: rt, r: none");
             return;
         }
         if(result.getHitBlock() == null) {
             e.setCancelled(true);
-            e.getPlayer().teleport(e.getPlayer().getLocation());
+            Punishment.setBack(e.getPlayer(), e.getPlayer().getLocation(), false);
             Notifier.notify(Notifier.Check.WORLD_BlockBreak, e.getPlayer(),
                     String.format("t: rt, r: %s, l: [%.2f, %.2f, %.2f]", "nblock", result.getHitPosition().getX(), result.getHitPosition().getY(), result.getHitPosition().getZ()));
             return;
         }
         if(!result.getHitBlock().getLocation().toBlockLocation().equals(e.getBlock().getLocation().toBlockLocation())) {
             e.setCancelled(true);
-            e.getPlayer().teleport(e.getPlayer().getLocation());
+            Punishment.setBack(e.getPlayer(), e.getPlayer().getLocation(), false);
             Notifier.notify(Notifier.Check.WORLD_BlockBreak, e.getPlayer(),
                     String.format("t: rt, r: %s, l: [%.2f, %.2f, %.2f], t1: %s, t2: %s", "nequ", result.getHitPosition().getX(), result.getHitPosition().getY(), result.getHitPosition().getZ(), e.getBlock().getType(), result.getHitBlock().getType()));
         }

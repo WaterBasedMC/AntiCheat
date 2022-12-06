@@ -44,25 +44,17 @@ public class CHECK_Speed implements Listener {
 
     @EventHandler
     public void onMove(PlayerPreciseMoveEvent e) {
-
         if(Punishment.isBeeingPunished(e.getPlayer())) {
             return;
         }
-
         if(e.getPlayer().getAllowFlight()) {
             return;
         }
-
         if(tickGrace.getOrDefault(e.getPlayer(), 0L) > AntiCheat.tick) {
             return;
         } else {
             tickGrace.remove(e.getPlayer());
         }
-
-        if(!checkPacketDistance(e.getPlayer(), e.getFrom(), e.getTo())) {
-            return;
-        }
-
     }
 
     @EventHandler
@@ -105,8 +97,7 @@ public class CHECK_Speed implements Listener {
         double xzDiff2 = Math.pow(to.getX() - from.getX(), 2) + Math.pow(to.getZ() - from.getZ(), 2);
         if(xzDiff2 > MAX_PACKET_XZ) {
             Notifier.notify(Notifier.Check.MOVEMENT_Speed, player, String.format("t: mpd, d: %.2f", xzDiff2));
-            player.teleport(from);
-            Punishment.freeze(player);
+            Punishment.setBack(player, from, true);
             return false;
         }
 
