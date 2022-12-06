@@ -4,6 +4,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import waterbased.anticheat.AntiCheat;
 import waterbased.anticheat.checks.movement.PlayerMovement;
 import waterbased.anticheat.events.PlayerOnGroundChangeEvent;
@@ -24,7 +27,7 @@ public class CHECK_NoFall implements Listener {
     public void onGroundChange(PlayerOnGroundChangeEvent e) {
         if (e.isOnGround()) {
             if (e.getFallDistance() - 3.0 >= 1) {
-                if(lastFallDamage.getOrDefault(e.getPlayer(), 0L) + 2 > AntiCheat.tick) { //Took fallDamage in last 2 ticks
+                if(lastFallDamage.getOrDefault(e.getPlayer(), 0L) + 4 > AntiCheat.tick) { //Took fallDamage in last 2 ticks
                     return;
                 }
                 noDamageGrace.put(e.getPlayer(), POSITION_PACKET_GRACE_NO_DAMAGE_COUNT);
@@ -36,7 +39,6 @@ public class CHECK_NoFall implements Listener {
 
     @EventHandler
     public void onPreciseMove(PlayerPreciseMoveEvent e) {
-
         if(PlayerMovement.inLiquid(e.getPlayer()) || PlayerMovement.inWebs(e.getPlayer()) || PlayerMovement.isClimbing(e.getPlayer())) {
             noDamageGrace.remove(e.getPlayer());
             shouldDamage.remove(e.getPlayer());
@@ -67,6 +69,24 @@ public class CHECK_NoFall implements Listener {
                 shouldDamage.remove(p);
             }
         }
+    }
+
+    @EventHandler
+    public void onTeleport(PlayerTeleportEvent e) {
+        noDamageGrace.remove(e.getPlayer());
+        shouldDamage.remove(e.getPlayer());
+    }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent e) {
+        noDamageGrace.remove(e.getEntity());
+        shouldDamage.remove(e.getEntity());
+    }
+
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent e) {
+        noDamageGrace.remove(e.getPlayer());
+        shouldDamage.remove(e.getPlayer());
     }
 
 }

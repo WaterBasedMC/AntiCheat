@@ -64,7 +64,8 @@ public class CHECK_Flight implements Listener {
                 || PlayerMovement.isClimbing(e.getPlayer())
                 || PlayerMovement.inWebs(e.getPlayer())
                 || PlayerMovement.isOnGround(e.getPlayer())
-                || e.getPlayer().isGliding()) {
+                || e.getPlayer().isGliding()
+                || e.getPlayer().isSleeping()) {
             reset(e.getPlayer());
             return;
         }
@@ -145,9 +146,9 @@ public class CHECK_Flight implements Listener {
     }
 
     private static boolean checkMaxHeight(PlayerPreciseMoveEvent e) {
-        Location lastGround = PlayerMovement.getLastOnGround(e.getPlayer());
-        if (e.getTo().getY() - lastGround.getY() >= 1.5) { //TODO: Consider JumpBoost Effect/SlimeBlocks
-            Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastGround.getY()));
+        Location lastSafe = PlayerMovement.getLastSafeLocation(e.getPlayer());
+        if (e.getTo().getY() - lastSafe.getY() >= 1.5) { //TODO: Consider JumpBoost Effect/SlimeBlocks
+            Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastSafe.getY()));
             setBack(e.getPlayer());
             return true;
         }
@@ -187,15 +188,15 @@ public class CHECK_Flight implements Listener {
     }
 
     private static void setBack(Player player) {
-        Location lastGround = PlayerMovement.getLastOnGround(player);
-        if(player.getLocation().distanceSquared(lastGround) < 50) {
-            Punishment.setBack(player, lastGround);
+        Location lastSafe = PlayerMovement.getLastSafeLocation(player);
+        if(player.getLocation().distance(lastSafe) <= 500) {
+            Punishment.setBack(player, lastSafe);
         } else {
             Punishment.pullDown(player);
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler
     public void onRespawn(PlayerRespawnEvent e) {
         reset(e.getPlayer());
     }

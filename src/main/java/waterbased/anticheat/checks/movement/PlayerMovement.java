@@ -36,26 +36,7 @@ public class PlayerMovement implements Listener {
     private static final HashMap<Player, Boolean> isInLiquid = new HashMap<>();
     private static final HashMap<Player, Boolean> isInWebs = new HashMap<>();
     private static final HashMap<Player, Location> lastLocation = new HashMap<>();
-
-    public static Location getLastOnGround(Player player) {
-        return lastOnGround.getOrDefault(player, player.getLocation());
-    }
-
-    public static Location getHighestSinceGround(Player player) {
-        return highestSinceGround.getOrDefault(player, player.getLocation());
-    }
-
-    public static Location getLastInLiquid(Player player) {
-        return lastInLiquid.getOrDefault(player, player.getLocation());
-    }
-
-    public static Location getLastOnClimbable(Player player) {
-        return lastOnClimbable.getOrDefault(player, player.getLocation());
-    }
-
-    public static Location getLastInWebs(Player player) {
-        return lastInWebs.getOrDefault(player, player.getLocation());
-    }
+    private static final HashMap<Player, Location> lastSafeLocation = new HashMap<>();
 
     private static boolean callEvent(Player player, Location from, Location to, boolean onGround) {
         PlayerPreciseMoveEvent event = new PlayerPreciseMoveEvent(player, from, to, onGround);
@@ -82,9 +63,46 @@ public class PlayerMovement implements Listener {
         return Arrays.asList(b1, b2, b3, b4, b5, b6, b7, b8);
     }
 
+    public static Location getHighestSinceGround(Player player) {
+        return highestSinceGround.getOrDefault(player, player.getLocation());
+    }
+
+    public static Location getLastInLiquid(Player player) {
+        return lastInLiquid.getOrDefault(player, player.getLocation());
+    }
+
+    public static Location getLastInWebs(Player player) {
+        return lastInWebs.getOrDefault(player, player.getLocation());
+    }
+
+    public static Location getLastOnClimbable(Player player) {
+        return lastOnClimbable.getOrDefault(player, player.getLocation());
+    }
+
+    public static Location getLastOnGround(Player player) {
+        return lastOnGround.getOrDefault(player, player.getLocation());
+    }
+
+    public static Location getLastSafeLocation(Player player) {
+        return lastSafeLocation.getOrDefault(player, player.getLocation());
+    }
+
     public static boolean groundPacket(Player player, boolean onGround) {
         Location from = lastLocation.getOrDefault(player, player.getLocation());
         return movePacket(player, from.getX(), from.getY(), from.getZ(), from.getYaw(), from.getPitch(), onGround);
+    }
+
+    public static boolean inLava(Player player) {
+        return inLava(player.getBoundingBox(), player.getWorld());
+    }
+
+    private static boolean inLava(BoundingBox box, World world) {
+        for (Block block : getBlocksOfBoundingBox(box, world)) {
+            if (block.getType() == Material.LAVA) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static boolean inLiquid(Player player) {
@@ -112,20 +130,6 @@ public class PlayerMovement implements Listener {
         }
         return false;
     }
-
-    public static boolean inLava(Player player) {
-        return inLava(player.getBoundingBox(), player.getWorld());
-    }
-
-    private static boolean inLava(BoundingBox box, World world) {
-        for (Block block : getBlocksOfBoundingBox(box, world)) {
-            if (block.getType() == Material.LAVA) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 
     public static boolean inWebs(Player player) {
         return isInWebs.getOrDefault(player, inWebs(player.getBoundingBox(), player.getWorld()));
@@ -220,6 +224,7 @@ public class PlayerMovement implements Listener {
         if (inLiquid(box, to.getWorld())) {
             lastInLiquid.put(player, to);
             isInLiquid.put(player, true);
+            lastSafeLocation.put(player, to);
         } else {
             isInLiquid.put(player, false);
         }
@@ -227,6 +232,7 @@ public class PlayerMovement implements Listener {
         if (isClimbing(box, to.getWorld())) {
             lastOnClimbable.put(player, to);
             isOnClimbable.put(player, true);
+            lastSafeLocation.put(player, to);
         } else {
             isOnClimbable.put(player, false);
         }
@@ -234,6 +240,7 @@ public class PlayerMovement implements Listener {
         if (inWebs(box, to.getWorld())) {
             lastInWebs.put(player, to);
             isInWebs.put(player, true);
+            lastSafeLocation.put(player, to);
         } else {
             isInWebs.put(player, false);
         }
@@ -247,15 +254,13 @@ public class PlayerMovement implements Listener {
             lastOnGround.put(player, to);
             highestSinceGround.put(player, to);
             isOnGround.put(player, true);
+            lastSafeLocation.put(player, to);
         } else {
             isOnGround.put(player, false);
             if (highestSinceGround.getOrDefault(player, to).getY() < to.getY()) {
                 highestSinceGround.put(player, to);
             }
         }
-
-        player.sendActionBar(Component.text("OnGround: %b".formatted(isOnGround(player))));
-
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
