@@ -221,6 +221,7 @@ public class PlayerMovement implements Listener {
             lastInLiquid.put(player, to);
             isInLiquid.put(player, true);
             lastSafeLocation.put(player, to);
+            highestSinceGround.put(player, to);
         } else {
             isInLiquid.put(player, false);
         }
@@ -229,6 +230,7 @@ public class PlayerMovement implements Listener {
             lastOnClimbable.put(player, to);
             isOnClimbable.put(player, true);
             lastSafeLocation.put(player, to);
+            highestSinceGround.put(player, to);
         } else {
             isOnClimbable.put(player, false);
         }
@@ -237,6 +239,7 @@ public class PlayerMovement implements Listener {
             lastInWebs.put(player, to);
             isInWebs.put(player, true);
             lastSafeLocation.put(player, to);
+            highestSinceGround.put(player, to);
         } else {
             isInWebs.put(player, false);
         }
