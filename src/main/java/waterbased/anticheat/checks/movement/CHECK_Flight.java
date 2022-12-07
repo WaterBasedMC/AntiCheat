@@ -131,6 +131,19 @@ public class CHECK_Flight implements Listener {
 
     }
 
+    private static boolean checkOnGroundMidAir(PlayerPreciseMoveEvent e) {
+        if (e.getPlayer().isOnGround()) {
+            onGroundGrace.put(e.getPlayer(), onGroundGrace.getOrDefault(e.getPlayer(), 0) + 1);
+            if (onGroundGrace.get(e.getPlayer()) >= GRACE_GROUND_MID_AIR_COUNT) {
+                Notifier.notify(Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: og, g: %d", onGroundGrace.get(e.getPlayer())));
+                return true;
+            }
+        } else {
+            onGroundGrace.put(e.getPlayer(), 0);
+        }
+        return false;
+    }
+
     private static void reset(Player player) {
         onGroundGrace.remove(player);
         sumGrace.remove(player);
@@ -172,23 +185,7 @@ public class CHECK_Flight implements Listener {
         if (checkMaxHeight(e)) return;
         if (checkNoYMovement(e)) return;
         if (checkVerticalMovement(e)) return;
-
-    }
-
-    @EventHandler
-    public void onGroundChange(PlayerOnGroundChangeEvent e) {
-        if (Punishment.isBeeingPunished(e.getPlayer())) return;
-        if (e.isOnGround()) {
-            int grace = onGroundGrace.getOrDefault(e.getPlayer(), 0);
-            grace++;
-            if (grace >= GRACE_GROUND_MID_AIR_COUNT) {
-                setBack(e.getPlayer());
-                Notifier.notify(Check.MOVEMENT_Flight, e.getPlayer(), "t: OnGroundInAir");
-                onGroundGrace.remove(e.getPlayer());
-            } else {
-                onGroundGrace.put(e.getPlayer(), grace);
-            }
-        }
+        if (checkOnGroundMidAir(e)) return;
     }
 
     @EventHandler
