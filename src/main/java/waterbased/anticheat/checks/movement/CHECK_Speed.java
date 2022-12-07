@@ -15,6 +15,7 @@ import org.spigotmc.event.entity.EntityDismountEvent;
 import org.spigotmc.event.entity.EntityMountEvent;
 import waterbased.anticheat.AntiCheat;
 import waterbased.anticheat.events.PlayerPreciseMoveEvent;
+import waterbased.anticheat.checks.Check;
 import waterbased.anticheat.utils.Notifier;
 import waterbased.anticheat.utils.Punishment;
 
@@ -90,7 +91,7 @@ public class CHECK_Speed implements Listener {
     private boolean checkPacketDistance(Player player, Location from, Location to) {
         double xzDiff2 = Math.pow(to.getX() - from.getX(), 2) + Math.pow(to.getZ() - from.getZ(), 2);
         if (xzDiff2 > MAX_PACKET_XZ) {
-            Notifier.notify(Notifier.Check.MOVEMENT_Speed, player, String.format("t: mpd, d: %.2f", xzDiff2));
+            Notifier.notify(Check.MOVEMENT_Speed, player, String.format("t: mpd, d: %.2f", xzDiff2));
             Punishment.setBack(player, from, true);
             return false;
         }

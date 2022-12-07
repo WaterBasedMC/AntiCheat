@@ -5,6 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import waterbased.anticheat.AntiCheat;
 import waterbased.anticheat.events.PlayerPreciseMoveEvent;
+import waterbased.anticheat.checks.Check;
 import waterbased.anticheat.utils.Notifier;
 import waterbased.anticheat.utils.Punishment;
 import waterbased.anticheat.utils.UtilBlock;
@@ -29,7 +30,7 @@ public class CHECK_FastLadder implements Listener {
                     if (yDiff > 0.4 + TOLERANCE_LADDER_Y) {
                         climbGrace.put(e.getPlayer(), climbGrace.getOrDefault(e.getPlayer(), 0) + 1);
                         if (climbGrace.get(e.getPlayer()) > 3) {
-                            Notifier.notify(Notifier.Check.MOVEMENT_FastLadder, e.getPlayer(), String.format("t: yd, yd: %.2f", yDiff));
+                            Notifier.notify(Check.MOVEMENT_FastLadder, e.getPlayer(), String.format("t: yd, yd: %.2f", yDiff));
                             Punishment.setBack(e.getPlayer(), e.getFrom(), true);
                             climbGrace.put(e.getPlayer(), 0);
                         }

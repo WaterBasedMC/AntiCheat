@@ -1,6 +1,7 @@
 package waterbased.anticheat;
 
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import waterbased.anticheat.checks.movement.*;
@@ -31,22 +32,25 @@ public final class AntiCheat extends JavaPlugin {
     }
 
     private void enableChecks() {
-        Bukkit.getPluginManager().registerEvents(new Punishment(), this);
+        PluginManager pluginManager = Bukkit.getPluginManager();
+
+        pluginManager.registerEvents(new Punishment(), this);
 
         //Player Movement
-        Bukkit.getPluginManager().registerEvents(new PlayerMovement(), this);
+        pluginManager.registerEvents(new PlayerMovement(), this);
 
         //Movement
-        Bukkit.getPluginManager().registerEvents(new CHECK_Flight(), this);
-        Bukkit.getPluginManager().registerEvents(new CHECK_Elytra(), this);
-        Bukkit.getPluginManager().registerEvents(new CHECK_Speed(), this);
-        Bukkit.getPluginManager().registerEvents(new CHECK_FastLadder(), this);
+        pluginManager.registerEvents(new CHECK_Flight(), this);
+        pluginManager.registerEvents(new CHECK_Elytra(), this);
+        pluginManager.registerEvents(new CHECK_Speed(), this);
+        pluginManager.registerEvents(new CHECK_FastLadder(), this);
+        pluginManager.registerEvents(new CHECK_VehicleFlight(), this);
 
         //World
-        Bukkit.getPluginManager().registerEvents(new CHECK_BlockBreak(), this);
+        pluginManager.registerEvents(new CHECK_BlockBreak(), this);
 
         //Other
-        Bukkit.getPluginManager().registerEvents(new CHECK_NoFall(), this);
+        pluginManager.registerEvents(new CHECK_NoFall(), this);
     }
 
     private void startTicking() {

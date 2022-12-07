@@ -2,6 +2,7 @@ package waterbased.anticheat.utils;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -85,15 +86,18 @@ public class Punishment implements Listener {
         pullDownTask.put(p, task);
     }
 
-    public static void setBack(Player player, Location loc, boolean freeze) {
-        player.teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
-        if (freeze) {
-            freeze(player);
+    public static void setBack(Entity entity, Location loc, boolean freeze) {
+        if(entity.getLocation().getWorld() != loc.getWorld()) {
+            return;
+        }
+        entity.teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN, true, false);
+        if (entity instanceof Player p && freeze) {
+            freeze(p);
         }
     }
 
-    public static void setBack(Player player, Location loc) {
-        setBack(player, loc, true);
+    public static void setBack(Entity entity, Location loc) {
+        setBack(entity, loc, true);
     }
 
     public static void freeze(Player player) {

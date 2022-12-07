@@ -12,6 +12,7 @@ import waterbased.anticheat.AntiCheat;
 import waterbased.anticheat.checks.movement.PlayerMovement;
 import waterbased.anticheat.events.PlayerOnGroundChangeEvent;
 import waterbased.anticheat.events.PlayerPreciseMoveEvent;
+import waterbased.anticheat.checks.Check;
 import waterbased.anticheat.utils.Notifier;
 
 import java.util.HashMap;
@@ -19,7 +20,6 @@ import java.util.HashMap;
 public class CHECK_NoFall implements Listener {
 
     public static final int POSITION_PACKET_GRACE_NO_DAMAGE_COUNT = 3;
-
     private final HashMap<Player, Integer> noDamageGrace = new HashMap<>();
     private final HashMap<Player, Double> shouldDamage = new HashMap<>();
     private final HashMap<Player, Long> lastFallDamage = new HashMap<>();
@@ -52,11 +52,11 @@ public class CHECK_NoFall implements Listener {
         if (noDamageGrace.containsKey(e.getPlayer())) {
             noDamageGrace.put(e.getPlayer(), noDamageGrace.get(e.getPlayer()) - 1);
             if (noDamageGrace.get(e.getPlayer()) <= 0) {
-                e.getPlayer().damage(shouldDamage.get(e.getPlayer()));
-                Notifier.notify(Notifier.Check.PLAYER_NoFall, e.getPlayer(),
+                Notifier.notify(Check.PLAYER_NoFall, e.getPlayer(),
                         "t: %s, g: %d, d: %.2f".formatted("nd",
                                 POSITION_PACKET_GRACE_NO_DAMAGE_COUNT,
                                 shouldDamage.get(e.getPlayer())));
+                e.getPlayer().damage(shouldDamage.get(e.getPlayer()));
                 noDamageGrace.remove(e.getPlayer());
                 shouldDamage.remove(e.getPlayer());
             }

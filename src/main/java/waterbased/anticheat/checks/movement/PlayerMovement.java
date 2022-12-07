@@ -144,16 +144,11 @@ public class PlayerMovement implements Listener {
     }
 
     public static boolean isClimbing(Player player) {
-        return isOnClimbable.getOrDefault(player, isClimbing(player.getBoundingBox(), player.getWorld()));
+        return isOnClimbable.getOrDefault(player, isClimbing(player.getLocation()));
     }
 
-    private static boolean isClimbing(BoundingBox box, World world) {
-        for (Block block : getBlocksOfBoundingBox(box, world)) {
-            if (UtilBlock.isClimbableBlock(block)) {
-                return true;
-            }
-        }
-        return false;
+    private static boolean isClimbing(Location loc) {
+        return UtilBlock.isClimbableBlock(loc.getBlock());
     }
 
     public static boolean isOnGround(Player player) {
@@ -228,7 +223,7 @@ public class PlayerMovement implements Listener {
             isInLiquid.put(player, false);
         }
 
-        if (isClimbing(box, to.getWorld())) {
+        if (isClimbing(to)) {
             lastOnClimbable.put(player, to);
             isOnClimbable.put(player, true);
             lastSafeLocation.put(player, to);
@@ -265,6 +260,7 @@ public class PlayerMovement implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onTeleport(PlayerTeleportEvent e) {
         lastOnGround.put(e.getPlayer(), e.getTo());
+        lastSafeLocation.put(e.getPlayer(), e.getTo());
         highestSinceGround.put(e.getPlayer(), e.getTo());
         lastOnClimbable.put(e.getPlayer(), e.getTo());
     }

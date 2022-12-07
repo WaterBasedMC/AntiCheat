@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.inventory.ItemStack;
+import waterbased.anticheat.checks.Check;
 import waterbased.anticheat.utils.Notifier;
 
 public class CHECK_Elytra implements Listener {
@@ -16,7 +17,7 @@ public class CHECK_Elytra implements Listener {
             if (e.isGliding() && (p.getInventory().getChestplate() == null || p.getInventory().getChestplate().getType() != Material.ELYTRA)) {
                 e.setCancelled(true);
                 ItemStack chestplate = p.getInventory().getChestplate();
-                Notifier.notify(Notifier.Check.MOVEMENT_ElytraFlight, p, String.format("t: wi, ci: %s", chestplate == null ? "none" : chestplate.getType().toString()));
+                Notifier.notify(Check.MOVEMENT_ElytraFlight, p, String.format("t: wi, ci: %s", chestplate == null ? "none" : chestplate.getType().toString()));
             }
         }
     }
