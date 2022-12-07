@@ -1,5 +1,6 @@
 package waterbased.anticheat.checks.player;
 
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -25,9 +26,12 @@ public class CHECK_NoFall implements Listener {
 
     @EventHandler
     public void onGroundChange(PlayerOnGroundChangeEvent e) {
+        if (e.getPlayer().getGameMode() == GameMode.CREATIVE || e.getPlayer().getGameMode() == GameMode.SPECTATOR) {
+            return;
+        }
         if (e.isOnGround()) {
             if (e.getFallDistance() - 3.0 >= 1) {
-                if(lastFallDamage.getOrDefault(e.getPlayer(), 0L) + 4 > AntiCheat.tick) { //Took fallDamage in last 2 ticks
+                if (lastFallDamage.getOrDefault(e.getPlayer(), 0L) + 4 > AntiCheat.tick) { //Took fallDamage in last 2 ticks
                     return;
                 }
                 noDamageGrace.put(e.getPlayer(), POSITION_PACKET_GRACE_NO_DAMAGE_COUNT);
@@ -39,7 +43,7 @@ public class CHECK_NoFall implements Listener {
 
     @EventHandler
     public void onPreciseMove(PlayerPreciseMoveEvent e) {
-        if(PlayerMovement.inLiquid(e.getPlayer()) || PlayerMovement.inWebs(e.getPlayer()) || PlayerMovement.isClimbing(e.getPlayer())) {
+        if (PlayerMovement.inLiquid(e.getPlayer()) || PlayerMovement.inWebs(e.getPlayer()) || PlayerMovement.isClimbing(e.getPlayer())) {
             noDamageGrace.remove(e.getPlayer());
             shouldDamage.remove(e.getPlayer());
             return;

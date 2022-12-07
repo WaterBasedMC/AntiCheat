@@ -10,27 +10,26 @@ import waterbased.anticheat.utils.Punishment;
 
 public class CHECK_BlockBreak implements Listener {
 
-
     @EventHandler
     public void onBlockBreak(BlockBreakEvent e) {
 
-        if(e.getPlayer().getGameMode() == GameMode.CREATIVE) return; //Do not check in creative mode
+        if (e.getPlayer().getGameMode() == GameMode.CREATIVE) return; //Do not check in creative mode
 
         RayTraceResult result = e.getPlayer().rayTraceBlocks(5.0f);
-        if(result == null) {
+        if (result == null) {
             e.setCancelled(true);
             Punishment.setBack(e.getPlayer(), e.getPlayer().getLocation(), false);
             Notifier.notify(Notifier.Check.WORLD_BlockBreak, e.getPlayer(), "t: rt, r: none");
             return;
         }
-        if(result.getHitBlock() == null) {
+        if (result.getHitBlock() == null) {
             e.setCancelled(true);
             Punishment.setBack(e.getPlayer(), e.getPlayer().getLocation(), false);
             Notifier.notify(Notifier.Check.WORLD_BlockBreak, e.getPlayer(),
                     String.format("t: rt, r: %s, l: [%.2f, %.2f, %.2f]", "nblock", result.getHitPosition().getX(), result.getHitPosition().getY(), result.getHitPosition().getZ()));
             return;
         }
-        if(!result.getHitBlock().getLocation().toBlockLocation().equals(e.getBlock().getLocation().toBlockLocation())) {
+        if (!result.getHitBlock().getLocation().toBlockLocation().equals(e.getBlock().getLocation().toBlockLocation())) {
             e.setCancelled(true);
             Punishment.setBack(e.getPlayer(), e.getPlayer().getLocation(), false);
             Notifier.notify(Notifier.Check.WORLD_BlockBreak, e.getPlayer(),
@@ -38,6 +37,5 @@ public class CHECK_BlockBreak implements Listener {
         }
 
     }
-
 
 }

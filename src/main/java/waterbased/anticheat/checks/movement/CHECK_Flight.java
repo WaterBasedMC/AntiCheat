@@ -4,7 +4,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -19,9 +18,13 @@ import java.util.List;
 
 public class CHECK_Flight implements Listener {
 
+    public enum VerticalDirection {
+        UP, DOWN, NONE
+
+    }
+
     public static final int GRACE_NYM_COUNT = 8;
     public static final int GRACE_YSUM_COUNT = 3;
-    public static final int GRACE_GROUND_MID_AIR_COUNT = 3;
 
     /*
         TODO: Count in JumpBoost, SlowFalling,
@@ -30,12 +33,7 @@ public class CHECK_Flight implements Listener {
         - Walking on layer snow
 
      */
-
-    public enum VerticalDirection {
-        UP, DOWN, NONE
-
-        }
-
+    public static final int GRACE_GROUND_MID_AIR_COUNT = 3;
     private static final HashMap<Player, Integer> onGroundGrace = new HashMap<>();
     private static final HashMap<Player, Integer> sumGrace = new HashMap<>();
     private static final HashMap<Player, Integer> noYGrace = new HashMap<>();
@@ -43,40 +41,54 @@ public class CHECK_Flight implements Listener {
     private static final HashMap<Player, Double> lastYMove = new HashMap<>();
     private static final HashMap<Player, VerticalDirection> vertDirection = new HashMap<>();
 
-    private static void reset(Player player) {
-        onGroundGrace.remove(player);
-        sumGrace.remove(player);
-        noYGrace.remove(player);
-        vertMovements.remove(player);
-        lastYMove.remove(player);
-        vertDirection.remove(player);
+    private static boolean checkMaxHeight(PlayerPreciseMoveEvent e) {
+        Location lastSafe = PlayerMovement.getLastSafeLocation(e.getPlayer());
+        if (e.getTo().getY() - lastSafe.getY() >= 1.5) { //TODO: Consider JumpBoost Effect/SlimeBlocks
+            Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastSafe.getY()));
+            setBack(e.getPlayer());
+            return true;
+        }
+        return false;
     }
 
-    @EventHandler
-    public void onMove(PlayerPreciseMoveEvent e) {
-        if (Punishment.isBeeingPunished(e.getPlayer())) {
-            return;
+    private static void checkMovementDirection(PlayerPreciseMoveEvent e) {
+        if (!vertDirection.containsKey(e.getPlayer())) vertDirection.put(e.getPlayer(), VerticalDirection.NONE);
+        boolean changedDirection = false;
+        if (e.getFrom().getY() > e.getTo().getY() && vertDirection.get(e.getPlayer()) != VerticalDirection.DOWN) {
+            vertDirection.put(e.getPlayer(), VerticalDirection.DOWN);
+            changedDirection = true;
+        } else if (e.getFrom().getY() < e.getTo().getY() && vertDirection.get(e.getPlayer()) != VerticalDirection.UP) {
+            vertDirection.put(e.getPlayer(), VerticalDirection.UP);
+            changedDirection = true;
+        } else if (e.getFrom().getY() == e.getTo().getY() && vertDirection.get(e.getPlayer()) != VerticalDirection.NONE) {
+            vertDirection.put(e.getPlayer(), VerticalDirection.NONE);
+            changedDirection = true;
         }
 
-        if(e.getPlayer().getAllowFlight()
-                || e.getPlayer().isInsideVehicle()
-                || PlayerMovement.inLiquid(e.getPlayer())
-                || PlayerMovement.isClimbing(e.getPlayer())
-                || PlayerMovement.inWebs(e.getPlayer())
-                || PlayerMovement.isOnGround(e.getPlayer())
-                || e.getPlayer().isGliding()
-                || e.getPlayer().isSleeping()) {
-            reset(e.getPlayer());
-            return;
+        if (changedDirection) {
+            if (vertMovements.containsKey(e.getPlayer())) {
+                vertMovements.get(e.getPlayer()).clear();
+            }
+            lastYMove.remove(e.getPlayer());
+            sumGrace.put(e.getPlayer(), 0);
+            //noYGrace.put(e.getPlayer(), 0);
         }
+    }
 
-        checkMovementDirection(e); //Not a check only for clearing of graces.
-
-        if (checkMaxHeight(e)) return;
-        if (checkNoYMovement(e)) return;
-        if(checkVerticalMovement(e)) return;
-
-
+    private static boolean checkNoYMovement(PlayerPreciseMoveEvent e) {
+        if (e.getPlayer().getLocation().getBlock().getType() != Material.SNOW) {
+            double yDif = Math.abs(e.getFrom().getY() - e.getTo().getY());
+            yDif = Math.round(yDif * 1000) / 1000.0;
+            if (yDif <= 0.1) { //Moving horizontally without falling
+                noYGrace.put(e.getPlayer(), noYGrace.getOrDefault(e.getPlayer(), 0) + 1);
+                if (noYGrace.get(e.getPlayer()) >= GRACE_NYM_COUNT) {
+                    Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: ny, yd: %.2f, g: %d", yDif, noYGrace.get(e.getPlayer())));
+                    setBack(e.getPlayer());
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static boolean checkVerticalMovement(PlayerPreciseMoveEvent e) {
@@ -121,54 +133,49 @@ public class CHECK_Flight implements Listener {
 
     }
 
-    private static void checkMovementDirection(PlayerPreciseMoveEvent e) {
-        if (!vertDirection.containsKey(e.getPlayer())) vertDirection.put(e.getPlayer(), VerticalDirection.NONE);
-        boolean changedDirection = false;
-        if (e.getFrom().getY() > e.getTo().getY() && vertDirection.get(e.getPlayer()) != VerticalDirection.DOWN) {
-            vertDirection.put(e.getPlayer(), VerticalDirection.DOWN);
-            changedDirection = true;
-        } else if (e.getFrom().getY() < e.getTo().getY() && vertDirection.get(e.getPlayer()) != VerticalDirection.UP) {
-            vertDirection.put(e.getPlayer(), VerticalDirection.UP);
-            changedDirection = true;
-        } else if (e.getFrom().getY() == e.getTo().getY() && vertDirection.get(e.getPlayer()) != VerticalDirection.NONE) {
-            vertDirection.put(e.getPlayer(), VerticalDirection.NONE);
-            changedDirection = true;
-        }
+    private static void reset(Player player) {
+        onGroundGrace.remove(player);
+        sumGrace.remove(player);
+        noYGrace.remove(player);
+        vertMovements.remove(player);
+        lastYMove.remove(player);
+        vertDirection.remove(player);
+    }
 
-        if (changedDirection) {
-            if(vertMovements.containsKey(e.getPlayer())) {
-                vertMovements.get(e.getPlayer()).clear();
-            }
-            lastYMove.remove(e.getPlayer());
-            sumGrace.put(e.getPlayer(), 0);
-            //noYGrace.put(e.getPlayer(), 0);
+    private static void setBack(Player player) {
+        Location lastSafe = PlayerMovement.getLastSafeLocation(player);
+        if (player.getLocation().distance(lastSafe) <= 500) {
+            Punishment.setBack(player, lastSafe);
+        } else {
+            Punishment.pullDown(player);
         }
     }
 
-    private static boolean checkMaxHeight(PlayerPreciseMoveEvent e) {
-        Location lastSafe = PlayerMovement.getLastSafeLocation(e.getPlayer());
-        if (e.getTo().getY() - lastSafe.getY() >= 1.5) { //TODO: Consider JumpBoost Effect/SlimeBlocks
-            Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastSafe.getY()));
-            setBack(e.getPlayer());
-            return true;
+    @EventHandler
+    public void onMove(PlayerPreciseMoveEvent e) {
+        if (Punishment.isBeeingPunished(e.getPlayer())) {
+            return;
         }
-        return false;
-    }
 
-    private static boolean checkNoYMovement(PlayerPreciseMoveEvent e) {
-        if(e.getPlayer().getLocation().getBlock().getType() != Material.SNOW) {
-            double yDif = Math.abs(e.getFrom().getY() - e.getTo().getY());
-            yDif = Math.round(yDif * 1000) / 1000.0;
-            if (yDif <= 0.1) { //Moving horizontally without falling
-                noYGrace.put(e.getPlayer(), noYGrace.getOrDefault(e.getPlayer(), 0) + 1);
-                if (noYGrace.get(e.getPlayer()) >= GRACE_NYM_COUNT) {
-                    Notifier.notify(Notifier.Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: ny, yd: %.2f, g: %d", yDif, noYGrace.get(e.getPlayer())));
-                    setBack(e.getPlayer());
-                    return true;
-                }
-            }
+        if (e.getPlayer().getAllowFlight()
+                || e.getPlayer().isInsideVehicle()
+                || PlayerMovement.inLiquid(e.getPlayer())
+                || PlayerMovement.isClimbing(e.getPlayer())
+                || PlayerMovement.inWebs(e.getPlayer())
+                || PlayerMovement.isOnGround(e.getPlayer())
+                || e.getPlayer().isGliding()
+                || e.getPlayer().isSleeping()) {
+            reset(e.getPlayer());
+            return;
         }
-        return false;
+
+        checkMovementDirection(e); //Not a check only for clearing of graces.
+
+        if (checkMaxHeight(e)) return;
+        if (checkNoYMovement(e)) return;
+        if (checkVerticalMovement(e)) {
+        }
+
     }
 
     @EventHandler
@@ -184,15 +191,6 @@ public class CHECK_Flight implements Listener {
             } else {
                 onGroundGrace.put(e.getPlayer(), grace);
             }
-        }
-    }
-
-    private static void setBack(Player player) {
-        Location lastSafe = PlayerMovement.getLastSafeLocation(player);
-        if(player.getLocation().distance(lastSafe) <= 500) {
-            Punishment.setBack(player, lastSafe);
-        } else {
-            Punishment.pullDown(player);
         }
     }
 

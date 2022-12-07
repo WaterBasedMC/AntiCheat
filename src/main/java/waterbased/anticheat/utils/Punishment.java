@@ -1,7 +1,5 @@
 package waterbased.anticheat.utils;
 
-import com.comphenix.protocol.PacketType;
-import jdk.jshell.execution.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -10,7 +8,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 import waterbased.anticheat.AntiCheat;
 import waterbased.anticheat.checks.movement.PlayerMovement;
@@ -45,7 +42,7 @@ public class Punishment implements Listener {
         BukkitTask task = Bukkit.getScheduler().runTaskTimer(AntiCheat.instance, new Runnable() {
             @Override
             public void run() {
-                if(p.isDead() || PlayerMovement.isOnGround(p)) {
+                if (p.isDead() || PlayerMovement.isOnGround(p)) {
                     punishing.remove(p);
                     pullDownTask.remove(p).cancel();
                     pullDownLastLocation.remove(p);
@@ -54,15 +51,15 @@ public class Punishment implements Listener {
 
                 long time = AntiCheat.tick - startTick;
                 double ySpeed = GRAVITY_CONST * time;
-                if(ySpeed > 3.92) ySpeed = 3.92;
+                if (ySpeed > 3.92) ySpeed = 3.92;
 
                 Location from = pullDownLastLocation.getOrDefault(p, start);
 
                 boolean done = false;
                 double y = from.getY();
 
-                while(y > from.getY() - ySpeed) {
-                    if(!PlayerMovement.isOnGround(from.clone().subtract(0, from.getY() - y, 0), p.getBoundingBox(), 0.05)) {
+                while (y > from.getY() - ySpeed) {
+                    if (!PlayerMovement.isOnGround(from.clone().subtract(0, from.getY() - y, 0), p.getBoundingBox(), 0.05)) {
                         y -= 0.05;
                     } else {
                         done = true;
@@ -73,13 +70,11 @@ public class Punishment implements Listener {
                 //Get decimals of y
                 double yDecimals = y - (int) y;
 
-
-
                 Location to = from.clone();
                 to.setY(y);
                 p.teleport(to);
                 pullDownLastLocation.put(p, to);
-                if(done) {
+                if (done) {
                     UtilDamage.dealFallDamage(p, highest.getY() - to.getY(), true);
                     punishing.remove(p);
                     pullDownTask.remove(p).cancel();
@@ -92,7 +87,7 @@ public class Punishment implements Listener {
 
     public static void setBack(Player player, Location loc, boolean freeze) {
         player.teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
-        if(freeze) {
+        if (freeze) {
             freeze(player);
         }
     }

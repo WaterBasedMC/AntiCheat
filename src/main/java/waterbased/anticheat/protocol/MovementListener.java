@@ -32,7 +32,7 @@ public class MovementListener {
             @Override
             public void onPacketReceiving(PacketEvent e) {
 
-                if(!AntiCheat.instance.isEnabled()) return;
+                if (!AntiCheat.instance.isEnabled()) return;
 
                 PacketContainer packet = e.getPacket();
 

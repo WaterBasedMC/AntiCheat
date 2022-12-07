@@ -1,6 +1,5 @@
 package waterbased.anticheat.checks.movement;
 
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -23,13 +22,13 @@ public class CHECK_FastLadder implements Listener {
     @EventHandler
     public void onMove(PlayerPreciseMoveEvent e) {
 
-        if(UtilBlock.isClimbableBlock(e.getPlayer().getLocation().getBlock())) {
-            if(climbTick.getOrDefault(e.getPlayer(), 0L) < AntiCheat.tick) {
-                if(climbYLevel.containsKey(e.getPlayer())) {
+        if (UtilBlock.isClimbableBlock(e.getPlayer().getLocation().getBlock())) {
+            if (climbTick.getOrDefault(e.getPlayer(), 0L) < AntiCheat.tick) {
+                if (climbYLevel.containsKey(e.getPlayer())) {
                     double yDiff = e.getPlayer().getLocation().getY() - climbYLevel.get(e.getPlayer());
-                    if(yDiff > 0.4 + TOLERANCE_LADDER_Y) {
+                    if (yDiff > 0.4 + TOLERANCE_LADDER_Y) {
                         climbGrace.put(e.getPlayer(), climbGrace.getOrDefault(e.getPlayer(), 0) + 1);
-                        if(climbGrace.get(e.getPlayer()) > 3) {
+                        if (climbGrace.get(e.getPlayer()) > 3) {
                             Notifier.notify(Notifier.Check.MOVEMENT_FastLadder, e.getPlayer(), String.format("t: yd, yd: %.2f", yDiff));
                             Punishment.setBack(e.getPlayer(), e.getFrom(), true);
                             climbGrace.put(e.getPlayer(), 0);

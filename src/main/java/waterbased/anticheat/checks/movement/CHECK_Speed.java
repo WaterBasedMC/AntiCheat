@@ -1,10 +1,6 @@
 package waterbased.anticheat.checks.movement;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Color;
 import org.bukkit.Location;
-import org.bukkit.Particle;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -23,7 +19,6 @@ import waterbased.anticheat.utils.Notifier;
 import waterbased.anticheat.utils.Punishment;
 
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class CHECK_Speed implements Listener {
 
@@ -35,23 +30,22 @@ public class CHECK_Speed implements Listener {
         BACKWARD_STRAFE,
         BACKWARD_JITTERY,
         SIDEWAYS,
-        UNKNOWN;
+        UNKNOWN
     }
 
     private static final double MAX_PACKET_XZ = 0.381D;
 
-    private static HashMap<Player, Long> tickGrace = new HashMap<Player, Long>();
+    private static final HashMap<Player, Long> tickGrace = new HashMap<Player, Long>();
 
     @EventHandler
     public void onMove(PlayerPreciseMoveEvent e) {
-        if(Punishment.isBeeingPunished(e.getPlayer())) {
+        if (Punishment.isBeeingPunished(e.getPlayer())) {
             return;
         }
-        if(e.getPlayer().getAllowFlight()) {
+        if (e.getPlayer().getAllowFlight()) {
             return;
         }
-        if(tickGrace.getOrDefault(e.getPlayer(), 0L) > AntiCheat.tick) {
-            return;
+        if (tickGrace.getOrDefault(e.getPlayer(), 0L) > AntiCheat.tick) {
         } else {
             tickGrace.remove(e.getPlayer());
         }
@@ -59,11 +53,11 @@ public class CHECK_Speed implements Listener {
 
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent e) {
-        if(e.getEntity() instanceof Player p) {
-            if(e.getDamager() instanceof Player dp) {
+        if (e.getEntity() instanceof Player p) {
+            if (e.getDamager() instanceof Player dp) {
                 int multi = dp.getInventory().getItemInMainHand().getEnchantments().getOrDefault(Enchantment.KNOCKBACK, 0);
                 tickGrace.put(p, AntiCheat.tick + 5L + (multi * 2L));
-            } else if(e.getDamager() instanceof Projectile projectile) {
+            } else if (e.getDamager() instanceof Projectile projectile) {
                 tickGrace.put(p, AntiCheat.tick + 2L);
             }
         }
@@ -81,21 +75,21 @@ public class CHECK_Speed implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onMount(EntityMountEvent e) {
-        if(e.getEntity() instanceof Player p) {
+        if (e.getEntity() instanceof Player p) {
             tickGrace.put(p, AntiCheat.tick + 5);
         }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onMount(EntityDismountEvent e) {
-        if(e.getEntity() instanceof Player p) {
+        if (e.getEntity() instanceof Player p) {
             tickGrace.put(p, AntiCheat.tick + 5);
         }
     }
 
     private boolean checkPacketDistance(Player player, Location from, Location to) {
         double xzDiff2 = Math.pow(to.getX() - from.getX(), 2) + Math.pow(to.getZ() - from.getZ(), 2);
-        if(xzDiff2 > MAX_PACKET_XZ) {
+        if (xzDiff2 > MAX_PACKET_XZ) {
             Notifier.notify(Notifier.Check.MOVEMENT_Speed, player, String.format("t: mpd, d: %.2f", xzDiff2));
             Punishment.setBack(player, from, true);
             return false;
@@ -111,32 +105,30 @@ public class CHECK_Speed implements Listener {
 
         double angle = direction.angle(movement);
 
-        if(angle < 0.1) {
+        if (angle < 0.1) {
             return MovementDirection.FORWARD;
         }
-        if(angle > 0.1 && angle < 0.65) {
+        if (angle > 0.1 && angle < 0.65) {
             return MovementDirection.FORWARD_JITTERY;
         }
-        if(angle > 0.65 && angle < 0.85) {
+        if (angle > 0.65 && angle < 0.85) {
             return MovementDirection.FORWARD_STRAFE;
         }
-        if(angle > 1.47 && angle < 1.67) {
+        if (angle > 1.47 && angle < 1.67) {
             return MovementDirection.SIDEWAYS;
         }
-        if(angle > 1.67 && angle < 2.25) {
+        if (angle > 1.67 && angle < 2.25) {
             return MovementDirection.BACKWARD_JITTERY;
         }
-        if(angle > 2.25 && angle < 2.45) {
+        if (angle > 2.25 && angle < 2.45) {
             return MovementDirection.BACKWARD_STRAFE;
         }
-        if(angle > Math.PI - 0.1 && angle < Math.PI + 0.1) {
+        if (angle > Math.PI - 0.1 && angle < Math.PI + 0.1) {
             return MovementDirection.BACKWARD;
         }
 
         return MovementDirection.UNKNOWN;
 
     }
-
-
 
 }
