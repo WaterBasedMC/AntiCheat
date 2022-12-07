@@ -7,6 +7,7 @@ import org.bukkit.scheduler.BukkitTask;
 import waterbased.anticheat.checks.movement.*;
 import waterbased.anticheat.checks.player.CHECK_NoFall;
 import waterbased.anticheat.checks.world.CHECK_BlockBreak;
+import waterbased.anticheat.events.ServerTickEvent;
 import waterbased.anticheat.protocol.MovementListener;
 import waterbased.anticheat.utils.Punishment;
 
@@ -54,8 +55,9 @@ public final class AntiCheat extends JavaPlugin {
     }
 
     private void startTicking() {
-        Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
             tick++;
+            Bukkit.getPluginManager().callEvent(new ServerTickEvent(tick));
         }, 0, 1);
     }
 

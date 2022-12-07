@@ -4,17 +4,22 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import waterbased.anticheat.AntiCheat;
 import waterbased.anticheat.events.PlayerOnGroundChangeEvent;
 import waterbased.anticheat.events.PlayerPreciseMoveEvent;
 import waterbased.anticheat.checks.Check;
+import waterbased.anticheat.events.ServerTickEvent;
 import waterbased.anticheat.utils.Notifier;
 import waterbased.anticheat.utils.Punishment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CHECK_Flight implements Listener {
 
@@ -40,10 +45,12 @@ public class CHECK_Flight implements Listener {
     private static final HashMap<Player, List<Double>> vertMovements = new HashMap<>();
     private static final HashMap<Player, Double> lastYMove = new HashMap<>();
     private static final HashMap<Player, VerticalDirection> vertDirection = new HashMap<>();
+    private static final HashMap<Player, Double> tmpMaxY = new HashMap<>();
+    private static final HashMap<Player, Long> tmpMaxYTime = new HashMap<>();
 
     private static boolean checkMaxHeight(PlayerPreciseMoveEvent e) {
         Location lastSafe = PlayerMovement.getLastSafeLocation(e.getPlayer());
-        if (e.getTo().getY() - lastSafe.getY() >= 1.5) { //TODO: Consider JumpBoost Effect/SlimeBlocks
+        if (e.getTo().getY() - lastSafe.getY() >= tmpMaxY.getOrDefault(e.getPlayer(), 1.5)) { //TODO: Consider JumpBoost Effect/SlimeBlocks
             Notifier.notify(Check.MOVEMENT_Flight, e.getPlayer(), String.format("t: th, yd: %.2f", e.getTo().getY() - lastSafe.getY()));
             setBack(e.getPlayer());
             return true;
@@ -186,6 +193,24 @@ public class CHECK_Flight implements Listener {
         if (checkNoYMovement(e)) return;
         if (checkVerticalMovement(e)) return;
         if (checkOnGroundMidAir(e)) return;
+    }
+
+    @EventHandler
+    public void onDamage(EntityDamageEvent e) {
+        if(e.getCause() == EntityDamageEvent.DamageCause.FALL) return;
+        if(e.getEntity() instanceof Player player) {
+            tmpMaxY.put(player, 3.0D);
+            tmpMaxYTime.put(player, AntiCheat.tick + 20);
+        }
+    }
+
+    @EventHandler
+    public void onServerTick(ServerTickEvent e) {
+        HashSet<Player> dueRemove = tmpMaxY.keySet().stream().filter(p -> tmpMaxYTime.get(p) < AntiCheat.tick).collect(Collectors.toCollection(HashSet::new));
+        dueRemove.forEach(p -> {
+            tmpMaxY.remove(p);
+            tmpMaxYTime.remove(p);
+        });
     }
 
     @EventHandler
