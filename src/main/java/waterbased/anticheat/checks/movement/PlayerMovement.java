@@ -10,6 +10,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
@@ -263,6 +265,25 @@ public class PlayerMovement implements Listener {
         lastSafeLocation.put(e.getPlayer(), e.getTo());
         highestSinceGround.put(e.getPlayer(), e.getTo());
         lastOnClimbable.put(e.getPlayer(), e.getTo());
+        onMove(e.getPlayer(), e.getTo(), e.getTo(), e.getPlayer().isOnGround());
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onDeath(PlayerDeathEvent e) {
+        lastOnGround.put(e.getPlayer(), e.getPlayer().getLocation());
+        lastSafeLocation.put(e.getPlayer(), e.getPlayer().getLocation());
+        highestSinceGround.put(e.getPlayer(), e.getPlayer().getLocation());
+        lastOnClimbable.put(e.getPlayer(), e.getPlayer().getLocation());
+        onMove(e.getPlayer(), e.getPlayer().getLocation(), e.getPlayer().getLocation(), e.getPlayer().isOnGround());
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onRespawn(PlayerRespawnEvent e) {
+        lastOnGround.put(e.getPlayer(), e.getRespawnLocation());
+        lastSafeLocation.put(e.getPlayer(), e.getRespawnLocation());
+        highestSinceGround.put(e.getPlayer(), e.getRespawnLocation());
+        lastOnClimbable.put(e.getPlayer(), e.getRespawnLocation());
+        onMove(e.getPlayer(), e.getRespawnLocation(), e.getRespawnLocation(), e.getPlayer().isOnGround());
     }
 
 }
